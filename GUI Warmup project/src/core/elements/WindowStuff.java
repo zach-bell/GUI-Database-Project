@@ -2,7 +2,6 @@ package core.elements;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -33,6 +32,7 @@ public class WindowStuff extends JFrame {
 	
 	// Buttons
 	private JButton loginButton;
+	private JButton createUser;
 	private JButton aboutProject;
 	private JButton academicInterest;
 	private JButton hobbies;
@@ -50,8 +50,10 @@ public class WindowStuff extends JFrame {
 		panel();
 		initContent();
 		
-		add(titlePanel, BorderLayout.SOUTH);
-		add(buttonPanel, BorderLayout.NORTH);
+		add(titlePanel, BorderLayout.NORTH);
+		grid.gridx = 0;
+		grid.gridy = 1;
+		titlePanel.add(buttonPanel, grid);
 		add(contentPanel, BorderLayout.CENTER);
 	}
 	
@@ -72,6 +74,7 @@ public class WindowStuff extends JFrame {
 	
 	private void buttons() {
 		loginButton = new JButton("Log In");
+		createUser = new JButton("Create new user");
 		loginButton.setToolTipText("Lets you login or Logout");
 		aboutProject = new JButton("About my Project");
 		aboutProject.setToolTipText("Learn more about the project");
@@ -82,8 +85,8 @@ public class WindowStuff extends JFrame {
 		
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				toggleLogging();
 				System.out.println("Loggin button clicked");
+				toggleLogging();
 			}
 		});
 		aboutProject.addActionListener(new ActionListener() {
@@ -108,7 +111,7 @@ public class WindowStuff extends JFrame {
 		buttonPanel.setBackground(Color.GRAY);
 		buttonPanel.setVisible(true);
 		
-		titlePanel = new JPanel(new FlowLayout());
+		titlePanel = new JPanel(new GridBagLayout());
 		titlePanel.setBackground(Color.GRAY);
 		titlePanel.setVisible(true);
 		
@@ -159,6 +162,8 @@ public class WindowStuff extends JFrame {
 		contentPanel.add(loginVar.getPasswordInput(), grid);
 		grid.gridy = 2;
 		contentPanel.add(loginVar.getDropDown(), grid);
+		grid.gridy = 3;
+		contentPanel.add(createUser);
 	}
 	
 	public void toggleLogging() {

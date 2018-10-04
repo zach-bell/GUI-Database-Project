@@ -11,7 +11,7 @@ public class UserClass {
 	
 	/** <strong>Creates a user object to interact with.</strong>
 	 * 
-	 * @param username is required
+	 * @param username for the user
 	 * @param password
 	 */
 	public UserClass(String username, String password) {
@@ -20,27 +20,24 @@ public class UserClass {
 		usertype = LoginVerification.USER_CUS;
 	}
 	
-	public UserClass(String username, String usertype, String nickname) {
+	public UserClass(String username, String password, String usertype) {
+		this.username = username;
+		this.usertype = usertype;
+		this.password = password;
+	}
+	
+	public UserClass(String username, String password, String usertype, String nickname) {
 		this.username = username;
 		this.usertype = usertype;
 		this.nickname = nickname;
-	}
-	
-	public UserClass(String username, String usertype, int permissionLevel) {
-		this.username = username;
-		this.usertype = usertype;
-		this.permissionLevel = permissionLevel;
-	}
-	
-	public UserClass(String username, String usertype, int permissionLevel, String nickname) {
-		this.username = username;
-		this.usertype = usertype;
-		this.nickname = nickname;
-		this.permissionLevel = permissionLevel;
+		this.password = password;
 	}
 
 	public String getUsername() {
 		return username;
+	}
+	public String getPassword() {
+		return password;
 	}
 	public String getUserType() {
 		return usertype;

@@ -23,10 +23,31 @@ public class LoginVerification {
 		userList = new ArrayList<UserClass>();
 		userInput = new JTextField(15);
 		passInput = new JPasswordField(15);
+		testInit();
+	}
+	
+	public boolean checkUniqueUser(UserClass user) {
+		for (UserClass u : userList) {
+			if (u.getUsername().equals(user.getUsername()))
+				return false;
+		}
+		return true;
+	}
+	
+	public boolean addUser(UserClass user) {
+		if (checkUniqueUser(user)) {
+			userList.add(user);
+			return true;
+		}
+		System.out.println("User already exists!");
+		return false;
 	}
 	
 	public void testInit() {
-		userList.add(new UserClass("admin1",USER_ADMIN));
+		addUser(new UserClass("admin","admin", USER_ADMIN));
+		addUser(new UserClass("staff1","staff1",USER_STAFF));
+		addUser(new UserClass("cus1","cus1",USER_CUS));
+		addUser(new UserClass("james1","james1",USER_CUS,"James"));
 	}
 	
 	public JTextField getUserInput() {

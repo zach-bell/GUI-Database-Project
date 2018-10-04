@@ -29,9 +29,11 @@ public class WindowStuff extends JFrame {
 	private JPanel buttonPanel;
 	private JPanel titlePanel;
 	private JPanel contentPanel;
+	private JPanel contentPanel2;
 	
 	// Buttons
 	private JButton loginButton;
+	private JButton logoutButton;
 	private JButton createUser;
 	private JButton aboutProject;
 	private JButton academicInterest;
@@ -58,7 +60,6 @@ public class WindowStuff extends JFrame {
 	}
 	
 	private void labelText() {
-		// Title label
 		titleThing = new JLabel("Database GUI project");
 		Font font = titleThing.getFont();
 		titleThing.setFont(font.deriveFont(24f));
@@ -69,11 +70,11 @@ public class WindowStuff extends JFrame {
 		contentLabel.setForeground(Color.DARK_GRAY);
 		contentLabel2 = new JLabel();
 		contentLabel2.setForeground(Color.DARK_GRAY);
-		
 	}
 	
 	private void buttons() {
 		loginButton = new JButton("Log In");
+		logoutButton = new JButton("Log out");
 		createUser = new JButton("Create new user");
 		loginButton.setToolTipText("Lets you login or Logout");
 		aboutProject = new JButton("About my Project");
@@ -86,6 +87,12 @@ public class WindowStuff extends JFrame {
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("Loggin button clicked");
+				toggleLogging();
+			}
+		});
+		logoutButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Logout button clicked");
 				toggleLogging();
 			}
 		});
@@ -119,29 +126,17 @@ public class WindowStuff extends JFrame {
 		contentPanel.setBackground(Color.WHITE);
 		contentPanel.setVisible(true);
 		
+		contentPanel2 = new JPanel(new GridBagLayout());
+		contentPanel2.setBackground(Color.WHITE);
+		
 		grid.insets = new Insets(10, 10, 10, 10);
 		titlePanel.add(titleThing);
-		grid.gridx = 0;
-		grid.gridy = 0;
-		buttonPanel.add(loginButton, grid);
 	}
 	
 	private void quickRemove() {
 		buttonPanel.remove(aboutProject);
 		buttonPanel.remove(academicInterest);
 		buttonPanel.remove(hobbies);
-		buttonPanel.setVisible(false);
-		buttonPanel.setVisible(true);
-	}
-	
-	private void quickAdd() {
-		grid.gridy = 0;
-		grid.gridx = 1;
-		buttonPanel.add(aboutProject, grid);
-		grid.gridx = 2;
-		buttonPanel.add(academicInterest, grid);
-		grid.gridx = 3;
-		buttonPanel.add(hobbies, grid);
 		buttonPanel.setVisible(false);
 		buttonPanel.setVisible(true);
 	}
@@ -163,17 +158,37 @@ public class WindowStuff extends JFrame {
 		grid.gridy = 2;
 		contentPanel.add(loginVar.getDropDown(), grid);
 		grid.gridy = 3;
-		contentPanel.add(createUser);
+		contentPanel.add(loginButton, grid);
+		grid.gridy = 4;
+		contentPanel.add(createUser, grid);
+	}
+	
+	private void populateContent(UserClass user) {
+		contentPanel.setVisible(false);
+		contentPanel2.setVisible(true);
+		if (user.getPermissionLevel() == 1) {
+			grid.gridy = 0;
+			grid.gridx = 1;
+			buttonPanel.add(aboutProject, grid);
+		}
+		if (user.getPermissionLevel() == 2) {
+			grid.gridx = 2;
+			buttonPanel.add(academicInterest, grid);
+		}
+		if (user.getPermissionLevel() == 3) {
+			grid.gridx = 3;
+			buttonPanel.add(hobbies, grid);
+		}
+		buttonPanel.setVisible(false);
+		buttonPanel.setVisible(true);
 	}
 	
 	public void toggleLogging() {
 		if (loggedIn) {
-			loginButton.setText("Log In");
 			quickRemove();
 			loggedIn = false;
 		} else {
-			loginButton.setText("Log out");
-			quickAdd();
+			if (loginVar.checkUniqueUser(new UserClass(loginVar.getUserInput().getText(), loginVar.getPasswordInput().getPassword().toString())))
 			loggedIn = true;
 		}
 	}

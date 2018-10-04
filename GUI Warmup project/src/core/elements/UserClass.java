@@ -48,4 +48,7 @@ public class UserClass {
 	public int getPermissionLevel() {
 		return permissionLevel;
 	}
+	public void setPermissionLevel(int perm) {
+		permissionLevel = perm;
+	}
 }

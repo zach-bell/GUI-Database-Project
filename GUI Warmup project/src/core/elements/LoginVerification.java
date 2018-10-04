@@ -34,13 +34,32 @@ public class LoginVerification {
 		return true;
 	}
 	
-	public boolean addUser(UserClass user) {
+	public int checkUser(UserClass user) {
+		for (UserClass u : userList) {
+			if (u.getUsername().equals(user.getUsername())) {
+				if (u.getPassword().equals(user.getPassword())) {
+					return user.getPermissionLevel();
+				} else {
+					return 0;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	public UserClass addUser(UserClass user) {
 		if (checkUniqueUser(user)) {
+			if (user.getUserType().equals(USER_CUS))
+				user.setPermissionLevel(1);
+			if (user.getUserType().equals(USER_STAFF))
+				user.setPermissionLevel(2);
+			if (user.getUserType().equals(USER_ADMIN))
+				user.setPermissionLevel(3);
 			userList.add(user);
-			return true;
+			return user;
 		}
 		System.out.println("User already exists!");
-		return false;
+		return null;
 	}
 	
 	public void testInit() {

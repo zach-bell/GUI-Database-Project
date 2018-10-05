@@ -34,26 +34,30 @@ public class LoginVerification {
 		return true;
 	}
 	
-	public int checkUser(UserClass user) {
+	public boolean checkUser(UserClass user) {
 		for (UserClass u : userList) {
 			if (u.getUsername().equals(user.getUsername())) {
 				if (u.getPassword().equals(user.getPassword())) {
-					return user.getPermissionLevel();
-				} else {
-					return 0;
-				}
+					if (u.getUserType().equals(user.getUserType())) {
+						return true;
+					}else {
+						return false;
+					}
+				} 
 			}
 		}
-		return -1;
+		return false;
 	}
 	
 	public UserClass addUser(UserClass user) {
 		if (checkUniqueUser(user)) {
-			if (user.getUserType().equals(USER_CUS))
+			System.out.println("Created user: "+user.getUsername()+
+					"\nOf usertype: "+user.getUserType());
+			if (user.getUserType().equals(usertypes[2]))
 				user.setPermissionLevel(1);
-			if (user.getUserType().equals(USER_STAFF))
+			if (user.getUserType().equals(usertypes[1]))
 				user.setPermissionLevel(2);
-			if (user.getUserType().equals(USER_ADMIN))
+			if (user.getUserType().equals(usertypes[0]))
 				user.setPermissionLevel(3);
 			userList.add(user);
 			return user;

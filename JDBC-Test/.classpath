@@ -9,5 +9,7 @@
 	<classpathentry kind="lib" path="mysql-lib/jboss-common-jdbc-wrapper.jar"/>
 	<classpathentry kind="lib" path="mysql-lib/protobuf-java-3.6.1.jar"/>
 	<classpathentry kind="lib" path="mysql-lib/slf4j-api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/local_policy.jar"/>
+	<classpathentry kind="lib" path="lib/US_export_policy.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

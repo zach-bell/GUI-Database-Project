@@ -22,7 +22,7 @@ public class DatabaseWindow extends JFrame {
 		// Initializers
 		screen = new Screen();
 		connection = new ConnectorDB();
-		frames = new Frames(connection, screen);
+		frames = new Frames(this, connection, screen);
 	}
 	
 	

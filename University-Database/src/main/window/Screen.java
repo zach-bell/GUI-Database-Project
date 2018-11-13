@@ -10,15 +10,15 @@ public class Screen {
 	
 	public int permLvl = 0;
 	
-	public JPanel activePanel;
+	public JPanel panel;
 	
 	public Screen() {
 		permLvl = 1;
-		activePanel = new JPanel();
+		panel = new JPanel();
 	}
 	
 	public Screen(int permLvl) {
 		this.permLvl = permLvl;
-		activePanel = new JPanel();
+		panel = new JPanel();
 	}
 }

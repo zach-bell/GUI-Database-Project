@@ -17,12 +17,15 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import main.SQL.ConnectorDB;
+import main.SQL.User;
 
 public class Frames {
 	
+	// General vars
 	private ConnectorDB connector;
 	private JFrame mainFrame;
 	private boolean loggedIn = false;
+	public User currentUser;
 	
 	// Fields
 	private JTextField userInput;
@@ -46,10 +49,10 @@ public class Frames {
 	private JPanel buttonPanel;
 	private JPanel contentPanelInard;
 	
-	// Button
+	// Buttons
 	private JButton loginButton;
 	private JButton logoutButton;
-	
+	private JButton createButton;
 	// JFrame vars
 	private GridBagConstraints grid;
 	private Font font;
@@ -63,6 +66,8 @@ public class Frames {
 		adminScreen = new Screen();
 		staffScreen = new Screen();
 		customerScreen = new Screen();
+		
+		currentUser = new User("","",0);
 		
 		grid = new GridBagConstraints();
 		grid.insets = new Insets(10, 10, 10, 10);
@@ -96,8 +101,6 @@ public class Frames {
 		grid.gridy = 0;
 		loginScreen.panel.add(loginPanel, grid);
 		grid.gridy = 1;
-		loginScreen.panel.add(contentPanelInard, grid);
-		grid.gridy = 2;
 		loginScreen.panel.add(errorText, grid);
 		
 		loginLabel.setText("Login:");
@@ -117,6 +120,8 @@ public class Frames {
 		grid.gridx = 1;
 		loginPanel.add(loginButton, grid);
 		
+		clearOutButtons();
+		
 		if (!connector.connected) {
 			errorText.setText("Database is offline or unreachable");
 			errorText.setVisible(true);
@@ -124,10 +129,13 @@ public class Frames {
 	}
 	
 	public void populateAdminFrame() {
+		System.out.println("Admin Panel Initialized");
 		JPanel adminPanel = new JPanel(new GridBagLayout());
 		adminPanel.setBackground(Color.LIGHT_GRAY);
+		adminPanel.setVisible(true);
 		
-		
+		buttonPanel.add(createButton);
+		adminScreen.panel.add(adminPanel);
 	}
 	
 	public void mainInit() {
@@ -167,17 +175,13 @@ public class Frames {
 		loginScreen.panel.setBackground(Color.WHITE);
 		loginScreen.panel.setVisible(true);
 		
-		buttonPanel = new JPanel(new GridBagLayout());
-		buttonPanel.setBackground(Color.GRAY);
-		buttonPanel.setVisible(true);
+		// inits buttonPanel and contentPanel
+		clearOutButtons();
+		clearOutContent();
 		
 		grid.gridx = 0;
 		grid.gridy = 1;
 		titlePanel.add(buttonPanel, grid);
-		
-		contentPanelInard = new JPanel(new GridBagLayout());
-		contentPanelInard.setBackground(Color.WHITE);
-		contentPanelInard.setVisible(false);
 	}
 	
 	public void buttonInit() {
@@ -203,19 +207,62 @@ public class Frames {
 				toggleLogging();
 			}
 		});
+		
+		createButton = new JButton("About my Project");
+		createButton.setToolTipText("Displays the");
+		createButton.setFont(font.deriveFont(14f));
+	}
+	
+	public void clearOutContent() {
+		contentPanelInard = new JPanel(new GridBagLayout());
+		contentPanelInard.setBackground(Color.WHITE);
+		contentPanelInard.setVisible(true);
+	}
+	
+	public void clearOutButtons() {
+		buttonPanel = new JPanel(new GridBagLayout());
+		buttonPanel.setBackground(Color.GRAY);
+		buttonPanel.setVisible(true);
+	}
+	
+	public void setLogin() {
+		if (currentUser.permLvl == 3) {
+			clearOutContent();
+			clearOutButtons();
+			populateAdminFrame();
+			setCurrentScreen(adminScreen);
+		} else
+		if (currentUser.permLvl == 2) {
+			clearOutContent();
+			clearOutButtons();
+			setCurrentScreen(staffScreen);
+		} else
+		if (currentUser.permLvl == 1) {
+			clearOutContent();
+			clearOutButtons();
+			setCurrentScreen(customerScreen);
+		} else {
+			clearOutContent();
+			clearOutButtons();
+			setCurrentScreen(loginScreen);
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
 	public void toggleLogging() {
 		if (loggedIn) {
+			populateLoginFrame();
 			setCurrentScreen(loginScreen);
 			loggedIn = false;
 		} else {
 			System.out.println("Testing username: "+userInput.getText()+
 					"\nTesting Password: "+passInput.getText());
-			if (connector.checkUser(userInput.getText(), passInput.getText()) != -1) {
+			User temp = connector.checkUser(userInput.getText(), passInput.getText());
+			if (temp.permLvl != -1) {
 				errorText.setVisible(false);
 				System.out.println("\nUser logged in successfully.\n");
+				currentUser = temp;
+				setLogin();
 				loggedIn = true;
 			} else {
 				errorText.setVisible(false);

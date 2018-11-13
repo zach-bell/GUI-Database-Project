@@ -76,21 +76,21 @@ public class ConnectorDB {
 	 * <p>This will check the username and password against the database</p>
 	 * @return This returns their permission level. -1 for user not existing.
 	 */
-	public int checkUser(String username, String password) {
+	public User checkUser(String username, String password) {
 		String sender = "select * from `db-users`";
-		int permLvl = 0;
+		User temp = new User(username, password, 0);
 		try {
 			set = statement.executeQuery(sender);
 			while (set.next()) {
-				if(username.equals(set.getString("username"))) {
-					if(password.equals(set.getString("password"))) {
-						permLvl = set.getInt("permLvl");
+				if(temp.username.equals(set.getString("username"))) {
+					if(temp.password.equals(set.getString("password"))) {
+						temp.permLvl = set.getInt("permLvl");
 						break;
 					} else {
-						permLvl = -1;
+						temp.permLvl = -1;
 					}
 				} else {
-					permLvl = -1;
+					temp.permLvl = -1;
 				}
 			}
 		} catch(SQLException e) {
@@ -100,6 +100,6 @@ public class ConnectorDB {
 			errorMsg = "\nAn error has occured in general\n" + e.getMessage();
 			System.out.println(errorMsg);
 		}
-		return permLvl;
+		return temp;
 	}
 }

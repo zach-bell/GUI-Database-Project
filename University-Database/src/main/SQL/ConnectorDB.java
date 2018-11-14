@@ -6,10 +6,12 @@ package main.SQL;
  * -------------------------- */
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 public class ConnectorDB {
 	
@@ -18,6 +20,8 @@ public class ConnectorDB {
 	public String errorMsg = "No errors";
 	
 	private Connection con;
+	
+	private DatabaseMetaData dbMetaData;
 	
 	private Statement statement;
 	
@@ -37,6 +41,7 @@ public class ConnectorDB {
 				System.out.println("-- CONNECTION FAILED WITHIN 10 SECONDS --\n");
 			}
 			// creates a statement object
+			dbMetaData = con.getMetaData();
 			statement = con.createStatement();
 			
 		} catch(SQLException e) {
@@ -51,7 +56,7 @@ public class ConnectorDB {
 	} // eof connectorDB()
 	
 	public String selectTable(String table, String[] collums, String conditions) {
-		String sender = "select * from `" + table + "`";
+		String sender = "select * from `" + table + "`" + " where " + conditions;
 		String result = "";
 		try {
 			set = statement.executeQuery(sender);
@@ -65,11 +70,46 @@ public class ConnectorDB {
 			result += err;
 			System.out.println(err);
 		} catch(Exception e) {
-			String err = "\nAn error has occured with SQL\n" + e.getMessage();
+			String err = "\nAn error has occured in general\n" + e.getMessage();
 			result += err;
 			System.out.println(err);
 		}
 		return result;
+	}
+	
+	public ArrayList<String> listTables() {
+		ArrayList<String> returnList = new ArrayList<String>();
+		try {
+			String[] types = {"TABLE"};
+			set = dbMetaData.getTables(null, null, "%", types);
+			while (set.next()) {
+				returnList.add(set.getString("TABLE_NAME"));
+			}
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+		}
+		return returnList;
+	}
+	
+	public String databaseRaw(String command) {
+		String returnString = "";
+		try {
+			set = statement.executeQuery(command);
+			while (set.next()) {
+				returnString += set.getMetaData().toString();
+				returnString += "\n";
+			}
+		} catch(SQLException e) {
+			String err = "\nAn error has occured with SQL\n" + e.getSQLState();
+			returnString += err;
+		} catch(Exception e) {
+			String err = "\nAn error has occured in general\n" + e.getMessage();
+			returnString += err;
+		}
+		returnString += "\n";
+		return returnString;
 	}
 	
 	/**	<strong>checkUser(username, password)</strong>
@@ -85,6 +125,7 @@ public class ConnectorDB {
 				if(temp.username.equals(set.getString("username"))) {
 					if(temp.password.equals(set.getString("password"))) {
 						temp.permLvl = set.getInt("permLvl");
+						temp.nickname = set.getString("nickname");
 						break;
 					} else {
 						temp.permLvl = -1;

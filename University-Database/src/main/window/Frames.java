@@ -41,6 +41,7 @@ public class Frames {
 	private JLabel loginLabel;
 	private JLabel passwordLabel;
 	private JLabel errorText;
+	private JLabel timeLabel;
 	
 	// Panels
 	private JPanel titlePanel;
@@ -158,7 +159,16 @@ public class Frames {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Home");
 		
+		JLabel infoText = new JLabel("Welcome " + currentUser.nickname + "!");
+		infoText.setFont(font.deriveFont(14f));
+		infoText.setForeground(Color.DARK_GRAY);
+		JLabel infoText2 = new JLabel("The current time is (D:HH:MM:SS)");
+		infoText2.setFont(font.deriveFont(14f));
+		infoText2.setForeground(Color.DARK_GRAY);
 		
+		panelGridAdd(contentPanel, infoText, 0, 0);
+		panelGridAdd(contentPanel, infoText2, 0, 1);
+		panelGridAdd(contentPanel, timeLabel, 0, 2);
 	}
 	
 	private void populateAdminFrame() {
@@ -192,6 +202,10 @@ public class Frames {
 		titleLabel.setFont(font.deriveFont(24f));
 		titleLabel.setToolTipText("by: Zachary Vanscoit");
 		titleLabel.setForeground(Color.WHITE);
+		
+		timeLabel = new JLabel();
+		timeLabel.setForeground(Color.DARK_GRAY);
+		timeLabel.setFont(font.deriveFont(14f));
 		
 		loginLabel = new JLabel();
 		loginLabel.setForeground(Color.DARK_GRAY);
@@ -231,6 +245,19 @@ public class Frames {
 		grid.gridx = 0;
 		grid.gridy = 1;
 		titlePanel.add(buttonPanel, grid);
+	}
+	
+	public void updateTimeLabel() {
+		timeLabel.setText(getCurrentSystemTime());
+		contentPanel.repaint();
+	}
+	
+	private String getCurrentSystemTime() {
+		long seconds = System.currentTimeMillis() / 1000;
+		long minutes = seconds / 60;
+		long hours = minutes / 60;
+		long days = hours / 24;
+		return days + ":" + hours % 24 + ":" + minutes % 60 + ":" + seconds % 60; 
 	}
 	
 	private void buttonInit() {

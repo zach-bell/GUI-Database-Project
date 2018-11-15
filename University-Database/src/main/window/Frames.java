@@ -9,6 +9,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import javax.swing.JButton;
@@ -45,6 +46,7 @@ public class Frames {
 	private JLabel passwordLabel;
 	private JLabel errorText;
 	private JLabel timeLabel;
+	private ArrayList<JLabel> tableLabelsList;
 	
 	// Panels
 	private JPanel titlePanel;
@@ -83,6 +85,7 @@ public class Frames {
 	
 	private void generalInits() {
 		currentUser = new User("","",0);
+		tableLabelsList = new ArrayList<JLabel>();
 		
 		grid = new GridBagConstraints();
 		grid.insets = new Insets(10, 10, 10, 10);
@@ -137,19 +140,46 @@ public class Frames {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Create");
 		
+		JLabel tableDisplayLabel = new JLabel("");
+		tableDisplayLabel.setFont(font);
+		tableDisplayLabel.setForeground(Color.DARK_GRAY);
+		
+		JPanel createButtonPanel = new JPanel(new GridBagLayout());
+		createButtonPanel.setBackground(Color.LIGHT_GRAY);
+		createButtonPanel.setVisible(true);
+		
+		JPanel tableDisplay = new JPanel(new GridBagLayout());
+		tableDisplay.setBackground(Color.WHITE);
+		tableDisplay.setVisible(true);
+		
+		JScrollPane tableList = new JScrollPane(tableDisplay);
+		
+		populateTableLists();
+		
+		int i = 0;
+		for (JLabel table : tableLabelsList) {
+			grid.gridy = i;
+			tableDisplay.add(table, grid);
+			i++;
+		}
+		panelGridAdd(contentPanel, createButtonPanel, 0, 0);
+		panelGridAdd(contentPanel, tableList, 0, 1);
 	}
 	
 	private void populateExploreFrame() {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Explore");
 		
-		JScrollPane tableList = new JScrollPane();
+		JPanel tableListPane = new JPanel(new GridBagLayout());
+		tableListPane.setBackground(Color.WHITE);
+		tableListPane.setVisible(true);
+		JScrollPane tableList = new JScrollPane(tableListPane);
 		String[] tableListArray = connector.listTables().toArray(new String[connector.listTables().size()]);
 		for (int i = 0; i < tableListArray.length; i++) {
 			JButton tableEntry = new JButton(tableListArray[i]);
 			tableEntry.setFont(font.deriveFont(14f));
 			grid.gridy = i;
-			tableList.add(tableEntry, grid);
+			tableListPane.add(tableEntry, grid);
 		}
 		tableList.setVisible(true);
 		panelGridAdd(contentPanel, tableList, 0, 0);
@@ -158,8 +188,6 @@ public class Frames {
 	private void populateTerminalFrame() {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Terminal");
-		
-		JPanel createButtonPanel = new JPanel();
 		
 		panelGridAdd(contentPanel, scrollTerminalPanel, 0, 0);
 		panelGridAdd(contentPanel, terminalField, 0, 1);
@@ -190,6 +218,16 @@ public class Frames {
 		panelGridAdd(buttonPanel, exploreButton, 2, 0);
 		panelGridAdd(buttonPanel, terminalButton, 3, 0);
 		panelGridAdd(buttonPanel, logoutButton, 4, 0);
+	}
+	
+	private void populateTableLists() {
+		tableLabelsList.clear();
+		String[] tableListArray = connector.listTables().toArray(new String[connector.listTables().size()]);
+		for (int i = 0; i < tableListArray.length; i++) {
+			JLabel tableEntry = new JLabel(tableListArray[i]);
+			tableEntry.setFont(font.deriveFont(14f));
+			tableLabelsList.add(tableEntry);
+		}
 	}
 	
 	private void panelGridAdd(JPanel panel, Component comp, int gx, int gy) {
@@ -234,7 +272,6 @@ public class Frames {
 		titlePanel = new JPanel(new GridBagLayout());
 		titlePanel.setBackground(Color.GRAY);
 		titlePanel.setVisible(true);
-		titlePanel.add(titleLabel);
 		
 		contentPanel = new JPanel(new GridBagLayout());
 		contentPanel.setBackground(Color.LIGHT_GRAY);
@@ -251,9 +288,8 @@ public class Frames {
 		mainFrame.setBackground(Color.WHITE);
 		mainFrame.setVisible(true);
 		
-		grid.gridx = 0;
-		grid.gridy = 1;
-		titlePanel.add(buttonPanel, grid);
+		panelGridAdd(titlePanel, titleLabel, 0, 0);
+		panelGridAdd(titlePanel, buttonPanel, 0, 1);
 	}
 	
 	public void updateTimeLabel() {

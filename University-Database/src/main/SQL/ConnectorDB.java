@@ -93,6 +93,21 @@ public class ConnectorDB {
 		return returnList;
 	}
 	
+	public ArrayList<String> listDataTypes() {
+		ArrayList<String> returnList = new ArrayList<String>();
+	    try {
+			set = dbMetaData.getTypeInfo();
+		    while (set.next()) {
+		    	returnList.add(set.getString("TYPE_NAME"));
+		    }
+	    } catch (SQLException e) {
+			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+		}
+	    return returnList;
+	}
+	
 	public String databaseRaw(String command) {
 		String returnString = "";
 		try {

@@ -9,6 +9,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Calendar;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -29,6 +30,8 @@ public class Frames {
 	private JFrame mainFrame;
 	private boolean loggedIn = false;
 	public User currentUser;
+	private Calendar calendar;
+	private Color buttonColor;
 	
 	// Fields
 	private JTextField userInput;
@@ -55,6 +58,7 @@ public class Frames {
 	private JButton logoutButton;
 	private JButton homeButton;
 	private JButton createButton;
+	private JButton createTableButton;
 	private JButton exploreButton;
 	private JButton terminalButton;
 	
@@ -82,6 +86,9 @@ public class Frames {
 		
 		grid = new GridBagConstraints();
 		grid.insets = new Insets(10, 10, 10, 10);
+		
+		buttonColor = new Color(240,240,240);
+		font = new Font("Geneva", Font.BOLD, 12);
 		
 		userInput = new JTextField(15);
 		passInput = new JPasswordField(15);
@@ -138,10 +145,11 @@ public class Frames {
 		
 		JScrollPane tableList = new JScrollPane();
 		String[] tableListArray = connector.listTables().toArray(new String[connector.listTables().size()]);
-		for (String tableName : tableListArray) {
-			JButton tableEntry = new JButton(tableName);
+		for (int i = 0; i < tableListArray.length; i++) {
+			JButton tableEntry = new JButton(tableListArray[i]);
 			tableEntry.setFont(font.deriveFont(14f));
-			tableList.add(tableEntry);
+			grid.gridy = i;
+			tableList.add(tableEntry, grid);
 		}
 		tableList.setVisible(true);
 		panelGridAdd(contentPanel, tableList, 0, 0);
@@ -150,6 +158,8 @@ public class Frames {
 	private void populateTerminalFrame() {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Terminal");
+		
+		JPanel createButtonPanel = new JPanel();
 		
 		panelGridAdd(contentPanel, scrollTerminalPanel, 0, 0);
 		panelGridAdd(contentPanel, terminalField, 0, 1);
@@ -196,7 +206,6 @@ public class Frames {
 	
 	private void labelInit() {
 		titleLabel = new JLabel("LOGIN");
-		font = titleLabel.getFont();
 		terminalArea.setFont(font.deriveFont(12f));
 		
 		titleLabel.setFont(font.deriveFont(24f));
@@ -248,16 +257,9 @@ public class Frames {
 	}
 	
 	public void updateTimeLabel() {
-		timeLabel.setText(getCurrentSystemTime());
+		calendar = Calendar.getInstance();
+		timeLabel.setText(calendar.getTime().toString());
 		contentPanel.repaint();
-	}
-	
-	private String getCurrentSystemTime() {
-		long seconds = System.currentTimeMillis() / 1000;
-		long minutes = seconds / 60;
-		long hours = minutes / 60;
-		long days = hours / 24;
-		return days + ":" + hours % 24 + ":" + minutes % 60 + ":" + seconds % 60; 
 	}
 	
 	private void buttonInit() {
@@ -265,7 +267,8 @@ public class Frames {
 		loginButton = new JButton("Log In");
 		loginButton.setFont(font.deriveFont(14f));
 		loginButton.setToolTipText("Lets you login");
-		
+		loginButton.setFocusPainted(false);
+		loginButton.setBackground(buttonColor);
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tLoggin button clicked");
@@ -277,7 +280,8 @@ public class Frames {
 		logoutButton = new JButton("Log out");
 		logoutButton.setFont(font.deriveFont(14f));
 		logoutButton.setToolTipText("Lets you logout");
-		
+		logoutButton.setFocusPainted(false);
+		logoutButton.setBackground(buttonColor);
 		logoutButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tLogout button clicked");
@@ -288,7 +292,8 @@ public class Frames {
 		homeButton = new JButton("Home");
 		homeButton.setToolTipText("Displays the Home panel");
 		homeButton.setFont(font.deriveFont(14f));
-		
+		homeButton.setFocusPainted(false);
+		homeButton.setBackground(buttonColor);
 		homeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tHome button clicked");
@@ -299,7 +304,8 @@ public class Frames {
 		createButton = new JButton("Create");
 		createButton.setToolTipText("Displays the Creation panel");
 		createButton.setFont(font.deriveFont(14f));
-		
+		createButton.setFocusPainted(false);
+		createButton.setBackground(buttonColor);
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tCreate button clicked");
@@ -307,10 +313,23 @@ public class Frames {
 			}
 		});
 		
+		createTableButton = new JButton("Create Table");
+		createTableButton.setToolTipText("Displays the Creation Table panel");
+		createTableButton.setFont(font.deriveFont(12f));
+		createTableButton.setFocusPainted(false);
+		createTableButton.setBackground(buttonColor);
+		createTableButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("\tCreate Table button clicked");
+				
+			}
+		});
+		
 		exploreButton = new JButton("Explore");
 		exploreButton.setToolTipText("Displays the Explore panel");
 		exploreButton.setFont(font.deriveFont(14f));
-		
+		exploreButton.setFocusPainted(false);
+		exploreButton.setBackground(buttonColor);
 		exploreButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tExplore button clicked");
@@ -321,7 +340,8 @@ public class Frames {
 		terminalButton = new JButton("Terminal");
 		terminalButton.setToolTipText("Displays the Terminal panel");
 		terminalButton.setFont(font.deriveFont(14f));
-		
+		terminalButton.setFocusPainted(false);
+		terminalButton.setBackground(buttonColor);
 		terminalButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tExplore button clicked");

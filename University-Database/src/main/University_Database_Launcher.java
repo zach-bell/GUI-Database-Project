@@ -1,5 +1,10 @@
 package main;
 
+/* --------------------------
+ * CS 430 - Database Project
+ * By: Zachary Vanscoit
+ * -------------------------- */
+
 import javax.swing.JFrame;
 
 import main.window.DatabaseWindow;

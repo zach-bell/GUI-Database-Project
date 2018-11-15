@@ -1,5 +1,10 @@
 package main.SQL;
 
+/* --------------------------
+ * CS 430 - Database Project
+ * By: Zachary Vanscoit
+ * -------------------------- */
+
 public class User {
 	
 	public String username = "";

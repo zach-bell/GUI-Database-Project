@@ -87,8 +87,10 @@ public class ConnectorDB {
 			}
 		} catch (SQLException e) {
 			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+			errorMsg = e.getSQLState();
 		} catch (Exception e) {
 			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+			errorMsg = e.getMessage();
 		}
 		return returnList;
 	}
@@ -102,10 +104,40 @@ public class ConnectorDB {
 		    }
 	    } catch (SQLException e) {
 			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+			errorMsg = e.getSQLState();
 		} catch (Exception e) {
 			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+			errorMsg = e.getMessage();
 		}
 	    return returnList;
+	}
+	
+	public void createTable(String tableName, TableType[] tableInfo) {
+		try {
+			String sql = "create table if not exists `" + tableName +"` (";
+			for (int i = 0; i < tableInfo.length; i++) {
+				sql += "`" + tableInfo[i].nameTypes + "` ";
+				sql += tableInfo[i].types + "(";
+				if (tableInfo[i].lengths != null)
+					sql += tableInfo[i].lengths;
+				sql += ")";
+				if (i + 1 != tableInfo.length) {
+					sql += ", ";
+				}
+			}
+			if (tableInfo[0].primaryKey) {
+				sql += ", primary key (`" + tableInfo[0].primary + "`)";
+			}
+			sql += ");";
+			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+			errorMsg = e.getSQLState();
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		}
 	}
 	
 	public String databaseRaw(String command) {
@@ -118,9 +150,11 @@ public class ConnectorDB {
 			}
 		} catch(SQLException e) {
 			String err = "\nAn error has occured with SQL\n" + e.getSQLState();
+			errorMsg = e.getSQLState();
 			returnString += err;
 		} catch(Exception e) {
 			String err = "\nAn error has occured in general\n" + e.getMessage();
+			errorMsg = e.getMessage();
 			returnString += err;
 		}
 		returnString += "\n";
@@ -152,9 +186,11 @@ public class ConnectorDB {
 		} catch(SQLException e) {
 			errorMsg = "\nAn error has occured with SQL\n" + e.getSQLState();
 			System.out.println(errorMsg);
+			errorMsg = e.getSQLState();
 		} catch(Exception e) {
 			errorMsg = "\nAn error has occured in general\n" + e.getMessage();
 			System.out.println(errorMsg);
+			errorMsg = e.getMessage();
 		}
 		return temp;
 	}

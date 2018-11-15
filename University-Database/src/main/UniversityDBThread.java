@@ -1,5 +1,10 @@
 package main;
 
+/* --------------------------
+ * CS 430 - Database Project
+ * By: Zachary Vanscoit
+ * -------------------------- */
+
 import main.window.Frames;
 
 public class UniversityDBThread extends Thread {
@@ -14,6 +19,7 @@ public class UniversityDBThread extends Thread {
 		while (!Thread.currentThread().isInterrupted()) {
 		    try {
 		    	frames.updateTimeLabel();
+		    	
 		        Thread.sleep(1000);
 		    } catch (InterruptedException ex) {
 		        Thread.currentThread().interrupt();

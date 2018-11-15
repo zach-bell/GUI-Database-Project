@@ -8,7 +8,6 @@ package main.window;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -29,6 +28,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import main.SQL.ConnectorDB;
+import main.SQL.TableType;
 import main.SQL.User;
 
 public class Frames {
@@ -49,6 +49,8 @@ public class Frames {
 	private JTextField terminalField;
 	private JTextArea terminalArea;
 	private JTextArea exploreArea;
+	private JTextField tableNameField;
+	private ArrayList<TableColumnJHolder> tableColumnJHolderList;
 	
 	// Labels
 	private JLabel titleLabel;
@@ -98,6 +100,7 @@ public class Frames {
 	private void generalInits() {
 		currentUser = new User("","",0);
 		tableLabelsList = new ArrayList<JLabel>();
+		tableColumnJHolderList = new ArrayList<TableColumnJHolder>();
 		
 		grid = new GridBagConstraints();
 		grid.insets = new Insets(10, 10, 10, 10);
@@ -109,6 +112,7 @@ public class Frames {
 		
 		userInput = new JTextField(15);
 		passInput = new JPasswordField(15);
+		tableNameField = new JTextField(15);
 		terminalField = new JTextField(58);
 		terminalField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -199,7 +203,6 @@ public class Frames {
 		JLabel tableNameLabel = new JLabel("Name of Table");
 		tableNameLabel.setFont(font.deriveFont(12f));
 		tableNameLabel.setForeground(Color.DARK_GRAY);
-		JTextField tableNameField = new JTextField(15);
 		JLabel typeNameLabel = new JLabel("Name of Column");
 		typeNameLabel.setFont(font.deriveFont(12f));
 		typeNameLabel.setForeground(Color.DARK_GRAY);
@@ -246,6 +249,32 @@ public class Frames {
 		subPanel.setVisible(true);
 	}
 	
+	private void sendCreatedTable() {
+		ArrayList<TableType> tableTypeSender = new ArrayList<TableType>();
+		try {
+			for (TableColumnJHolder t : tableColumnJHolderList) {
+				if (!t.typeName.getText().equals("")) {
+					if (t.length.getText().equals("")) {
+						tableTypeSender.add(new TableType(t.typeName.getText(), t.dropDownTypes.getSelectedItem().toString()));
+					} else if (Integer.parseInt(t.length.getText()) > 0) {
+						tableTypeSender.add(new TableType(t.typeName.getText(), t.dropDownTypes.getSelectedItem().toString(), t.length.getText()));
+					}
+				}
+			}
+		} catch (NumberFormatException e) {
+			errorText.setText("Why don't you actually put a number in the length column in this time.");
+			errorText.setVisible(true);
+		}
+		if (connector.createTable(tableNameField.getText(), tableTypeSender.toArray(new TableType[tableTypeSender.size()]))) {
+			errorText.setText("Table Created Succesfully!");
+			errorText.setVisible(true);
+			populateSubCreateTableFrame();
+		} else {
+			errorText.setText("Alright listen... So about that table...");
+			errorText.setVisible(true);
+		}
+	}
+	
 	private void subPanelAddNewColumnType() {
 		createTableEntriesCount ++;
 		JTextField typeName = new JTextField(10);
@@ -254,6 +283,7 @@ public class Frames {
 		panelGridAdd(subPanel, typeName, 0, createTableEntriesCount);
 		panelGridAdd(subPanel, dropDownTypes, 1, createTableEntriesCount);
 		panelGridAdd(subPanel, length, 2, createTableEntriesCount);
+		tableColumnJHolderList.add(new TableColumnJHolder(typeName, dropDownTypes, length));
 		subPanel.setVisible(false);
 		subPanel.setVisible(true);
 	}
@@ -463,7 +493,7 @@ public class Frames {
 		sendTableUpdateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tSend Table button clicked");
-				
+				sendCreatedTable();
 			}
 		});
 		

@@ -112,7 +112,7 @@ public class ConnectorDB {
 	    return returnList;
 	}
 	
-	public void createTable(String tableName, TableType[] tableInfo) {
+	public boolean createTable(String tableName, TableType[] tableInfo) {
 		try {
 			String sql = "create table if not exists `" + tableName +"` (";
 			for (int i = 0; i < tableInfo.length; i++) {
@@ -134,10 +134,13 @@ public class ConnectorDB {
 		} catch (SQLException e) {
 			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
 			errorMsg = e.getSQLState();
+			return false;
 		} catch (Exception e) {
 			System.out.println("\nAn error has occured in general\n" + e.getMessage());
 			errorMsg = e.getMessage();
+			return false;
 		}
+		return true;
 	}
 	
 	public String databaseRaw(String command) {

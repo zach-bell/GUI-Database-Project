@@ -42,6 +42,7 @@ public class Frames {
 	private Color buttonColor;
 	private String[] listOfTypes;
 	private int createTableEntriesCount = 1;
+	private int createSubPanelPosition = 0;	// 0 for Create Table, 1 for Create Entry
 	
 	// Fields
 	private JTextField userInput;
@@ -51,6 +52,8 @@ public class Frames {
 	private JTextArea exploreArea;
 	private JTextField tableNameField;
 	private ArrayList<TableColumnJHolder> tableColumnJHolderList;
+	private JComboBox<String> dropDownTables;
+	private ArrayList<JTextField> entryFieldList;
 	
 	// Labels
 	private JLabel titleLabel;
@@ -58,6 +61,7 @@ public class Frames {
 	private JLabel passwordLabel;
 	private JLabel errorText;
 	private JLabel timeLabel;
+	private JLabel createTabSubPanelTitle;
 	private ArrayList<JLabel> tableLabelsList;
 	
 	// Panels
@@ -74,7 +78,8 @@ public class Frames {
 	private JButton homeButton;
 	private JButton createButton;
 	private JButton createTableButton;
-	private JButton sendTableUpdateButton;
+	private JButton createEntryButton;
+	private JButton sendUpdateButton;
 	private JButton exploreButton;
 	private JButton terminalButton;
 	
@@ -97,44 +102,57 @@ public class Frames {
 		populateLoginFrame();
 	}
 	
-	private void generalInits() {
-		currentUser = new User("","",0);
-		tableLabelsList = new ArrayList<JLabel>();
-		tableColumnJHolderList = new ArrayList<TableColumnJHolder>();
+	/*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
+	 * This begins a massive class that should be expressed object oriented
+	 * more than what it is now. There are barely any comments and its code
+	 * that's all over the place. Sorry for this mess but I promise it works.
+	 */
+	
+	private void populateHomeFrame() {
+		refreshPanel(contentPanel);
+		titleLabel.setText("Home");
 		
-		grid = new GridBagConstraints();
-		grid.insets = new Insets(10, 10, 10, 10);
+		JLabel infoText = new JLabel("Welcome " + currentUser.nickname + "!");
+		infoText.setFont(font.deriveFont(14f));
+		infoText.setForeground(Color.DARK_GRAY);
+		JLabel infoText2 = new JLabel("The current time is:");
+		infoText2.setFont(font.deriveFont(14f));
+		infoText2.setForeground(Color.DARK_GRAY);
 		
-		buttonColor = new Color(240,240,240);
-		font = new Font("Geneva", Font.BOLD, 12);
-		
-		listOfTypes = connector.listDataTypes().toArray(new String[connector.listDataTypes().size()]);
-		
-		userInput = new JTextField(15);
-		passInput = new JPasswordField(15);
-		tableNameField = new JTextField(15);
-		terminalField = new JTextField(58);
-		terminalField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String command = terminalField.getText();
-				terminalField.setText("");
-				terminalArea.append(command + "\n");
-				terminalArea.append(connector.databaseRaw(command)+"\n");
-			}
-		});
-		
-		terminalArea = new JTextArea(16, 58);
-		terminalArea.setBackground(Color.DARK_GRAY);
-		terminalArea.setForeground(Color.GREEN);
-		terminalArea.setEditable(false);
-		
-		exploreArea = new JTextArea(16, 58);
-		exploreArea.setBackground(Color.WHITE);
-		exploreArea.setForeground(Color.DARK_GRAY);
-		exploreArea.setEditable(false);
-		
-		scrollTerminalPanel = new JScrollPane(terminalArea);
+		panelGridAdd(contentPanel, infoText, 0, 0);
+		panelGridAdd(contentPanel, infoText2, 0, 1);
+		panelGridAdd(contentPanel, timeLabel, 0, 2);
 	}
+	
+	//	-------------------------------------------------------------------------------------------------
+	//		Home Frame
+	//	-------------------------------------------------------------------------------------------------
+	
+	public void populateTableLists() {
+		tableLabelsList.clear();
+		String[] tableListArray = connector.listTables();
+		for (int i = 0; i < tableListArray.length; i++) {
+			JLabel tableEntry = new JLabel(tableListArray[i]);
+			tableEntry.setFont(font.deriveFont(14f));
+			tableLabelsList.add(tableEntry);
+		}
+	}
+	
+	//	-------------------------------------------------------------------------------------------------
+	//		Terminal Frame
+	//	-------------------------------------------------------------------------------------------------
+	
+	private void populateTerminalFrame() {
+		refreshPanel(contentPanel);
+		titleLabel.setText("Terminal");
+		
+		panelGridAdd(contentPanel, scrollTerminalPanel, 0, 0);
+		panelGridAdd(contentPanel, terminalField, 0, 1);
+	}
+	
+	//	-------------------------------------------------------------------------------------------------
+	//		Login Frame
+	//	-------------------------------------------------------------------------------------------------
 	
 	private void populateLoginFrame() {
 		refreshPanel(contentPanel);
@@ -159,6 +177,10 @@ public class Frames {
 		}
 	}
 	
+	//	-------------------------------------------------------------------------------------------------
+	//		Create Frame
+	//	-------------------------------------------------------------------------------------------------
+	
 	private void populateCreateFrame() {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Create");
@@ -168,8 +190,12 @@ public class Frames {
 		tableDisplayLabel.setForeground(Color.DARK_GRAY);
 		
 		JPanel createButtonPanel = new JPanel(new GridBagLayout());
-		createButtonPanel.setBackground(Color.LIGHT_GRAY);
+		createButtonPanel.setBackground(Color.GRAY);
 		createButtonPanel.setVisible(true);
+		
+		JPanel adjustDisplayPanel = new JPanel(new GridBagLayout());
+		adjustDisplayPanel.setBackground(Color.LIGHT_GRAY);
+		adjustDisplayPanel.setVisible(true);
 		
 		JPanel tableDisplay = new JPanel(new GridBagLayout());
 		tableDisplay.setBackground(Color.WHITE);
@@ -186,19 +212,25 @@ public class Frames {
 			i++;
 		}
 		
-		populateSubCreateTableFrame();
+		populateCreateTableSubFrame();
 		
 		panelGridAdd(createButtonPanel, createTableButton, 0, 0);
+		panelGridAdd(createButtonPanel, createEntryButton, 1, 0);
 		
 		panelGridAdd(contentPanel, tableDisplayLabel, 0, 0);
 		panelGridAdd(contentPanel, createButtonPanel, 1, 0);
 		panelGridAdd(contentPanel, tableList, 0, 1);
-		panelGridAdd(contentPanel, subPanelScroll, 1, 1);
-		panelGridAdd(contentPanel, sendTableUpdateButton, 1, 2);
+		panelGridAdd(contentPanel, adjustDisplayPanel, 1, 1);
+		panelGridAdd(adjustDisplayPanel, createTabSubPanelTitle, 0, 0);
+		panelGridAdd(adjustDisplayPanel, subPanelScroll, 0, 1);
+		panelGridAdd(adjustDisplayPanel, sendUpdateButton, 0, 2);
 	}
 	
-	private void populateSubCreateTableFrame() {
+	private void populateCreateTableSubFrame() {
 		subPanel.removeAll();
+		createTabSubPanelTitle.setText("Create Table");
+		createSubPanelPosition = 0;
+		
 		createTableEntriesCount = 1;
 		JLabel tableNameLabel = new JLabel("Name of Table");
 		tableNameLabel.setFont(font.deriveFont(12f));
@@ -221,7 +253,7 @@ public class Frames {
 		clearTableButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tClear Table button clicked");
-				populateSubCreateTableFrame();
+				populateCreateTableSubFrame();
 			}
 		});
 		
@@ -268,7 +300,7 @@ public class Frames {
 		if (connector.createTable(tableNameField.getText(), tableTypeSender.toArray(new TableType[tableTypeSender.size()]))) {
 			errorText.setText("Table Created Succesfully!");
 			errorText.setVisible(true);
-			populateSubCreateTableFrame();
+			populateCreateTableSubFrame();
 		} else {
 			errorText.setText("Alright listen... So about that table...");
 			errorText.setVisible(true);
@@ -288,6 +320,55 @@ public class Frames {
 		subPanel.setVisible(true);
 	}
 	
+	private void populateCreateEntrySubFrame() {
+		subPanel.removeAll();
+		createSubPanelPosition = 1;
+		
+		JLabel tableListLabel = new JLabel("Table List");
+		JLabel tableColumnsLabel = new JLabel("Columns and types");
+		JPanel columnsTypesPanel = new JPanel(new GridBagLayout());
+		columnsTypesPanel.setBackground(Color.WHITE);
+		dropDownTables = new JComboBox<String>(connector.listTables());
+		dropDownTables.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				populateCreateEntrySubFrameColumns(columnsTypesPanel);
+			}
+		});
+		
+		populateCreateEntrySubFrameColumns(columnsTypesPanel);
+		
+		panelGridAdd(subPanel, tableListLabel, 0, 0);
+		panelGridAdd(subPanel, tableColumnsLabel, 1, 0);
+		panelGridAdd(subPanel, dropDownTables, 0, 1);
+		panelGridAdd(subPanel, columnsTypesPanel, 1, 1);
+	}
+	
+	private void populateCreateEntrySubFrameColumns(JPanel panel) {
+		entryFieldList.clear();
+		int columnsTypesPanelX = 0;
+		for (TableType tableColumn : connector.listColumns(connector.listTables()[dropDownTables.getSelectedIndex()])) {
+			JLabel columnName = new JLabel(tableColumn.nameTypes);
+			columnName.setFont(font.deriveFont(12f));
+			JTextField entryValue = new JTextField(8);
+			entryFieldList.add(entryValue);
+			panelGridAdd(panel, columnName, columnsTypesPanelX, 0);
+			panelGridAdd(panel, entryValue, columnsTypesPanelX, 1);
+			columnsTypesPanelX ++;
+			JLabel columnType = new JLabel(tableColumn.types+"("+tableColumn.lengths+")");
+			columnType.setFont(font.deriveFont(12f));
+			panelGridAdd(panel, columnType, columnsTypesPanelX, 1);
+			columnsTypesPanelX ++;
+		}
+	}
+	
+	private void sendCreatedEntry() {
+		
+	}
+	
+	//	-------------------------------------------------------------------------------------------------
+	//		Explore Frame
+	//	-------------------------------------------------------------------------------------------------
+	
 	private void populateExploreFrame() {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Explore");
@@ -296,7 +377,7 @@ public class Frames {
 		tableListPane.setBackground(Color.WHITE);
 		tableListPane.setVisible(true);
 		JScrollPane tableList = new JScrollPane(tableListPane);
-		String[] tableListArray = connector.listTables().toArray(new String[connector.listTables().size()]);
+		String[] tableListArray = connector.listTables();
 		for (int i = 0; i < tableListArray.length; i++) {
 			JButton tableEntry = new JButton(tableListArray[i]);
 			tableEntry.setFont(font.deriveFont(14f));
@@ -307,29 +388,9 @@ public class Frames {
 		panelGridAdd(contentPanel, tableList, 0, 0);
 	}
 	
-	private void populateTerminalFrame() {
-		refreshPanel(contentPanel);
-		titleLabel.setText("Terminal");
-		
-		panelGridAdd(contentPanel, scrollTerminalPanel, 0, 0);
-		panelGridAdd(contentPanel, terminalField, 0, 1);
-	}
-	
-	private void populateHomeFrame() {
-		refreshPanel(contentPanel);
-		titleLabel.setText("Home");
-		
-		JLabel infoText = new JLabel("Welcome " + currentUser.nickname + "!");
-		infoText.setFont(font.deriveFont(14f));
-		infoText.setForeground(Color.DARK_GRAY);
-		JLabel infoText2 = new JLabel("The current time is:");
-		infoText2.setFont(font.deriveFont(14f));
-		infoText2.setForeground(Color.DARK_GRAY);
-		
-		panelGridAdd(contentPanel, infoText, 0, 0);
-		panelGridAdd(contentPanel, infoText2, 0, 1);
-		panelGridAdd(contentPanel, timeLabel, 0, 2);
-	}
+	//	-------------------------------------------------------------------------------------------------
+	//		User Frames
+	//	-------------------------------------------------------------------------------------------------
 	
 	private void populateAdminFrame() {
 		refreshPanel(contentPanel);
@@ -342,20 +403,49 @@ public class Frames {
 		panelGridAdd(buttonPanel, logoutButton, 4, 0);
 	}
 	
-	public void populateTableLists() {
-		tableLabelsList.clear();
-		String[] tableListArray = connector.listTables().toArray(new String[connector.listTables().size()]);
-		for (int i = 0; i < tableListArray.length; i++) {
-			JLabel tableEntry = new JLabel(tableListArray[i]);
-			tableEntry.setFont(font.deriveFont(14f));
-			tableLabelsList.add(tableEntry);
-		}
-	}
+	//	-------------------------------------------------------------------------------------------------
+	//		Initializer Methods
+	//	-------------------------------------------------------------------------------------------------
 	
-	private void panelGridAdd(JPanel panel, Component comp, int gx, int gy) {
-		grid.gridx = gx;
-		grid.gridy = gy;
-		panel.add(comp, grid);
+	private void generalInits() {
+		currentUser = new User("","",0);
+		tableLabelsList = new ArrayList<JLabel>();
+		entryFieldList = new ArrayList<JTextField>();
+		tableColumnJHolderList = new ArrayList<TableColumnJHolder>();
+		dropDownTables = new JComboBox<String>();
+		
+		grid = new GridBagConstraints();
+		grid.insets = new Insets(10, 10, 10, 10);
+		
+		buttonColor = new Color(240,240,240);
+		font = new Font("Geneva", Font.BOLD, 12);
+		
+		listOfTypes = connector.listDataTypes().toArray(new String[connector.listDataTypes().size()]);
+		
+		userInput = new JTextField(15);
+		passInput = new JPasswordField(15);
+		tableNameField = new JTextField(15);
+		terminalField = new JTextField(58);
+		terminalField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String command = terminalField.getText();
+				terminalField.setText("");
+				terminalArea.append(command + "\n");
+				terminalArea.append(connector.databaseRaw(command)+"\n");
+			}
+		});
+		
+		terminalArea = new JTextArea(16, 58);
+		terminalArea.setBackground(Color.DARK_GRAY);
+		terminalArea.setForeground(Color.GREEN);
+		terminalArea.setEditable(false);
+		
+		exploreArea = new JTextArea(16, 58);
+		exploreArea.setBackground(Color.WHITE);
+		exploreArea.setForeground(Color.DARK_GRAY);
+		exploreArea.setEditable(false);
+		
+		scrollTerminalPanel = new JScrollPane(terminalArea);
 	}
 	
 	private void mainInit() {
@@ -388,6 +478,10 @@ public class Frames {
 		errorText.setForeground(Color.RED);
 		errorText.setFont(font.deriveFont(14f));
 		errorText.setVisible(false);
+		
+		createTabSubPanelTitle = new JLabel("");
+		createTabSubPanelTitle.setForeground(Color.DARK_GRAY);
+		createTabSubPanelTitle.setFont(font.deriveFont(14f));
 	}
 	
 	private void panelInit() {
@@ -481,19 +575,34 @@ public class Frames {
 		createTableButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tCreate Table button clicked");
-				
+				populateCreateTableSubFrame();
 			}
 		});
 		
-		sendTableUpdateButton = new JButton("Send Table");
-		sendTableUpdateButton.setToolTipText("Displays the Creation Table panel");
-		sendTableUpdateButton.setFont(font.deriveFont(12f));
-		sendTableUpdateButton.setFocusPainted(false);
-		sendTableUpdateButton.setBackground(buttonColor);
-		sendTableUpdateButton.addActionListener(new ActionListener() {
+		createEntryButton = new JButton("Create Entry");
+		createEntryButton.setToolTipText("Displays the Creation Entry panel");
+		createEntryButton.setFont(font.deriveFont(12f));
+		createEntryButton.setFocusPainted(false);
+		createEntryButton.setBackground(buttonColor);
+		createEntryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("\tSend Table button clicked");
-				sendCreatedTable();
+				System.out.println("\tCreate Entry button clicked");
+				populateCreateEntrySubFrame();
+			}
+		});
+		
+		sendUpdateButton = new JButton("Send Update");
+		sendUpdateButton.setToolTipText("Sends an update to the database");
+		sendUpdateButton.setFont(font.deriveFont(12f));
+		sendUpdateButton.setFocusPainted(false);
+		sendUpdateButton.setBackground(buttonColor);
+		sendUpdateButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("\tSend Update button clicked");
+				if (createSubPanelPosition == 0)
+					sendCreatedTable();
+				if (createSubPanelPosition == 1)
+					sendCreatedEntry();
 			}
 		});
 		
@@ -520,12 +629,22 @@ public class Frames {
 				populateTerminalFrame();
 			}
 		});
-	}
+	} // ButtonInit()
+	
+	//	-------------------------------------------------------------------------------------------------
+	//		Other Methods
+	//	-------------------------------------------------------------------------------------------------
 	
 	private void refreshPanel(JPanel panel) {
 		panel.removeAll();
 		panel.setVisible(false);
 		panel.setVisible(true);
+	}
+	
+	private void panelGridAdd(JPanel panel, Component comp, int gx, int gy) {
+		grid.gridx = gx;
+		grid.gridy = gy;
+		panel.add(comp, grid);
 	}
 	
 	private void setLogin() {

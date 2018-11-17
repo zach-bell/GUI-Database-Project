@@ -77,7 +77,24 @@ public class ConnectorDB {
 		return result;
 	}
 	
-	public ArrayList<String> listTables() {
+	public TableType[] listColumns(String tableName) {
+		ArrayList<TableType> returnList = new ArrayList<TableType>();
+		try {
+			set = dbMetaData.getColumns(null,null, tableName, null);
+			while(set.next()) {
+				returnList.add(new TableType(set.getString("COLUMN_NAME"), set.getString("DATA_TYPE"), set.getString("COLUMN_SIZE")));
+			}
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+			errorMsg = e.getSQLState();
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		}
+		return returnList.toArray(new TableType[returnList.size()]);
+	}
+	
+	public String[] listTables() {
 		ArrayList<String> returnList = new ArrayList<String>();
 		try {
 			String[] types = {"TABLE"};
@@ -92,7 +109,7 @@ public class ConnectorDB {
 			System.out.println("\nAn error has occured in general\n" + e.getMessage());
 			errorMsg = e.getMessage();
 		}
-		return returnList;
+		return returnList.toArray(new String[returnList.size()]);
 	}
 	
 	public ArrayList<String> listDataTypes() {

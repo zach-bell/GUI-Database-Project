@@ -69,6 +69,7 @@ public class Frames {
 	private JPanel buttonPanel;
 	private JPanel contentPanel;
 	private JPanel subPanel;
+	private JPanel columnsTypesPanel;
 	private JScrollPane scrollTerminalPanel;
 	private JScrollPane subPanelScroll;
 	
@@ -326,16 +327,8 @@ public class Frames {
 		
 		JLabel tableListLabel = new JLabel("Table List");
 		JLabel tableColumnsLabel = new JLabel("Columns and types");
-		JPanel columnsTypesPanel = new JPanel(new GridBagLayout());
-		columnsTypesPanel.setBackground(Color.WHITE);
-		dropDownTables = new JComboBox<String>(connector.listTables());
-		dropDownTables.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				populateCreateEntrySubFrameColumns(columnsTypesPanel);
-			}
-		});
 		
-		populateCreateEntrySubFrameColumns(columnsTypesPanel);
+		populateCreateEntrySubFrameColumns();
 		
 		panelGridAdd(subPanel, tableListLabel, 0, 0);
 		panelGridAdd(subPanel, tableColumnsLabel, 1, 0);
@@ -343,22 +336,25 @@ public class Frames {
 		panelGridAdd(subPanel, columnsTypesPanel, 1, 1);
 	}
 	
-	private void populateCreateEntrySubFrameColumns(JPanel panel) {
+	private void populateCreateEntrySubFrameColumns() {
 		entryFieldList.clear();
+		System.out.println("");
 		int columnsTypesPanelX = 0;
 		for (TableType tableColumn : connector.listColumns(connector.listTables()[dropDownTables.getSelectedIndex()])) {
 			JLabel columnName = new JLabel(tableColumn.nameTypes);
 			columnName.setFont(font.deriveFont(12f));
 			JTextField entryValue = new JTextField(8);
 			entryFieldList.add(entryValue);
-			panelGridAdd(panel, columnName, columnsTypesPanelX, 0);
-			panelGridAdd(panel, entryValue, columnsTypesPanelX, 1);
+			panelGridAdd(columnsTypesPanel, columnName, columnsTypesPanelX, 0);
+			panelGridAdd(columnsTypesPanel, entryValue, columnsTypesPanelX, 1);
 			columnsTypesPanelX ++;
 			JLabel columnType = new JLabel(tableColumn.types+"("+tableColumn.lengths+")");
 			columnType.setFont(font.deriveFont(12f));
-			panelGridAdd(panel, columnType, columnsTypesPanelX, 1);
+			panelGridAdd(columnsTypesPanel, columnType, columnsTypesPanelX, 1);
 			columnsTypesPanelX ++;
 		}
+		columnsTypesPanel.setVisible(false);
+		columnsTypesPanel.setVisible(true);
 	}
 	
 	private void sendCreatedEntry() {
@@ -435,6 +431,13 @@ public class Frames {
 			}
 		});
 		
+		dropDownTables = new JComboBox<String>(connector.listTables());
+		dropDownTables.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				populateCreateEntrySubFrameColumns();
+			}
+		});
+		
 		terminalArea = new JTextArea(16, 58);
 		terminalArea.setBackground(Color.DARK_GRAY);
 		terminalArea.setForeground(Color.GREEN);
@@ -496,6 +499,10 @@ public class Frames {
 		subPanel = new JPanel(new GridBagLayout());
 		subPanel.setBackground(Color.WHITE);
 		subPanel.setVisible(true);
+		
+		columnsTypesPanel = new JPanel(new GridBagLayout());
+		columnsTypesPanel.setBackground(Color.WHITE);
+		columnsTypesPanel.setVisible(true);
 		
 		subPanelScroll = new JScrollPane(subPanel);
 		

@@ -14,7 +14,6 @@ import main.SQL.ConnectorDB;
 public class DatabaseWindow extends JFrame {
 	
 	private ConnectorDB connection;
-	@SuppressWarnings("unused")
 	private Frames frames;
 	private UniversityDBThread dbThread;
 	

@@ -8,6 +8,7 @@ package main.window;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -28,6 +29,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import main.SQL.ConnectorDB;
+import main.SQL.TableData;
 import main.SQL.TableType;
 import main.SQL.User;
 
@@ -83,6 +85,7 @@ public class Frames {
 	private JButton sendUpdateButton;
 	private JButton exploreButton;
 	private JButton terminalButton;
+	private ArrayList<JButton> exploreButtonTableList;
 	
 	// JFrame vars
 	private GridBagConstraints grid;
@@ -185,6 +188,7 @@ public class Frames {
 	private void populateCreateFrame() {
 		refreshPanel(contentPanel);
 		titleLabel.setText("Create");
+		subPanelScroll = new JScrollPane(subPanel);
 		
 		JLabel tableDisplayLabel = new JLabel("Currently Available Tables");
 		tableDisplayLabel.setFont(font);
@@ -323,6 +327,7 @@ public class Frames {
 	
 	private void populateCreateEntrySubFrame() {
 		subPanel.removeAll();
+		createTabSubPanelTitle.setText("Create Entry");
 		createSubPanelPosition = 1;
 		
 		JLabel tableListLabel = new JLabel("Table List");
@@ -334,10 +339,13 @@ public class Frames {
 		panelGridAdd(subPanel, tableColumnsLabel, 1, 0);
 		panelGridAdd(subPanel, dropDownTables, 0, 1);
 		panelGridAdd(subPanel, columnsTypesPanel, 1, 1);
+		subPanel.setVisible(false);
+		subPanel.setVisible(true);
 	}
 	
 	private void populateCreateEntrySubFrameColumns() {
 		entryFieldList.clear();
+		columnsTypesPanel.removeAll();
 		System.out.println("");
 		int columnsTypesPanelX = 0;
 		for (TableType tableColumn : connector.listColumns(connector.listTables()[dropDownTables.getSelectedIndex()])) {
@@ -358,7 +366,18 @@ public class Frames {
 	}
 	
 	private void sendCreatedEntry() {
-		
+		String[] values = new String[entryFieldList.size()];
+		for (int i = 0; i < values.length; i ++) {
+			values[i] = entryFieldList.get(i).getText();
+		}
+		if (connector.createData(connector.listTables()[dropDownTables.getSelectedIndex()], values)) {
+			populateCreateEntrySubFrameColumns();
+			errorText.setText("Entry Created Succesfully!");
+			errorText.setVisible(true);
+		} else {
+			errorText.setText(connector.errorMsg);
+			errorText.setVisible(true);
+		}
 	}
 	
 	//	-------------------------------------------------------------------------------------------------
@@ -367,7 +386,11 @@ public class Frames {
 	
 	private void populateExploreFrame() {
 		refreshPanel(contentPanel);
+		exploreButtonTableList.clear();
 		titleLabel.setText("Explore");
+		
+		subPanelScroll = new JScrollPane(subPanel);
+		subPanelScroll.setPreferredSize(new Dimension(500, 300));
 		
 		JPanel tableListPane = new JPanel(new GridBagLayout());
 		tableListPane.setBackground(Color.WHITE);
@@ -375,13 +398,62 @@ public class Frames {
 		JScrollPane tableList = new JScrollPane(tableListPane);
 		String[] tableListArray = connector.listTables();
 		for (int i = 0; i < tableListArray.length; i++) {
-			JButton tableEntry = new JButton(tableListArray[i]);
+			String tableName = tableListArray[i];
+			JButton tableEntry = new JButton(tableName);
+			tableEntry.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("\t" + tableName +" button clicked");
+					populateExploreFramePanel(tableName);
+				}
+			});
+			exploreButtonTableList.add(tableEntry);
 			tableEntry.setFont(font.deriveFont(14f));
-			grid.gridy = i;
-			tableListPane.add(tableEntry, grid);
+			panelGridAdd(tableListPane, tableEntry, 0, i);
+			if (i == 0)
+				populateExploreFramePanel(tableName);
 		}
 		tableList.setVisible(true);
+		
+		panelGridAdd(contentPanel, subPanelScroll, 1, 0);
 		panelGridAdd(contentPanel, tableList, 0, 0);
+	}
+	
+	private void populateExploreFramePanel(String tableName) {
+		subPanel.removeAll();
+		
+		JPanel innerPanel = new JPanel(new GridBagLayout());
+		innerPanel.setBackground(Color.LIGHT_GRAY);
+		innerPanel.setVisible(true);
+		
+		JLabel subPanelTitle = new JLabel(tableName);
+		subPanelTitle.setForeground(Color.DARK_GRAY);
+		subPanelTitle.setFont(font.deriveFont(14f));
+		
+		int i = 0;
+		for (TableType t : connector.listColumns(tableName)) {
+			JLabel columnTitle = new JLabel(t.nameTypes);
+			columnTitle.setFont(font.deriveFont(12f));
+			columnTitle.setForeground(Color.DARK_GRAY);
+			panelGridAdd(innerPanel, columnTitle, i, 0);
+			i ++;
+		}
+		
+		int y = 1;
+		for (TableData t : connector.selectTable(tableName)) {
+			int x = 0;
+			t.tableName = tableName;
+			t.index = y;
+			for (String s : t.data) {
+				JLabel data = new JLabel(s);
+				data.setFont(font.deriveFont(12f));
+				data.setForeground(Color.DARK_GRAY);
+				panelGridAdd(innerPanel, data, x, y);
+				x ++;
+			}
+			y ++;
+		}
+		panelGridAdd(subPanel, subPanelTitle, 0, 0);
+		panelGridAdd(subPanel, innerPanel, 0, 1);
 	}
 	
 	//	-------------------------------------------------------------------------------------------------
@@ -407,6 +479,7 @@ public class Frames {
 		currentUser = new User("","",0);
 		tableLabelsList = new ArrayList<JLabel>();
 		entryFieldList = new ArrayList<JTextField>();
+		exploreButtonTableList = new ArrayList<JButton>();
 		tableColumnJHolderList = new ArrayList<TableColumnJHolder>();
 		dropDownTables = new JComboBox<String>();
 		
@@ -416,7 +489,7 @@ public class Frames {
 		buttonColor = new Color(240,240,240);
 		font = new Font("Geneva", Font.BOLD, 12);
 		
-		listOfTypes = connector.listDataTypes().toArray(new String[connector.listDataTypes().size()]);
+		listOfTypes = connector.listDataTypes();
 		
 		userInput = new JTextField(15);
 		passInput = new JPasswordField(15);
@@ -505,6 +578,7 @@ public class Frames {
 		columnsTypesPanel.setVisible(true);
 		
 		subPanelScroll = new JScrollPane(subPanel);
+		subPanelScroll.setPreferredSize(new Dimension(500, 300));
 		
 		buttonPanel = new JPanel(new GridBagLayout());
 		buttonPanel.setBackground(Color.GRAY);

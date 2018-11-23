@@ -26,6 +26,7 @@ public class ConnectorDB {
 	private Statement statement;
 	
 	private ResultSet set;
+	private ResultSet set2;
 	
 	public ConnectorDB() {
 		try {
@@ -66,67 +67,79 @@ public class ConnectorDB {
 				}
 			result += "\n";
 		} catch(SQLException e) {
-			String err = "\nAn error has occured with SQL\n" + e.getSQLState();
+			String err = "\nAn error has occured in selectTable with SQL\n" + e.getSQLState();
 			result += err;
 			System.out.println(err);
 		} catch(Exception e) {
-			String err = "\nAn error has occured in general\n" + e.getMessage();
+			String err = "\nAn error has occured in selectTable with general\n" + e.getMessage();
 			result += err;
 			System.out.println(err);
 		}
 		return result;
 	}
 	
-	public TableType[] listColumns(String tableName) {
-		ArrayList<TableType> returnList = new ArrayList<TableType>();
+	public TableData[] selectTable(String table) {
+		String sql = "select * from `" + table + "`";
+		ArrayList<TableData> tableData = new ArrayList<TableData>();
 		try {
-			set = dbMetaData.getColumns(null,null, tableName, null);
-			while(set.next()) {
-				returnList.add(new TableType(set.getString("COLUMN_NAME"), set.getString("DATA_TYPE"), set.getString("COLUMN_SIZE")));
+			ArrayList<String> tableColumns = new ArrayList<String>();
+			for (TableType t : listColumns(table)) {
+				tableColumns.add(t.nameTypes);
 			}
-		} catch (SQLException e) {
-			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
-			errorMsg = e.getSQLState();
-		} catch (Exception e) {
-			System.out.println("\nAn error has occured in general\n" + e.getMessage());
-			errorMsg = e.getMessage();
-		}
-		return returnList.toArray(new TableType[returnList.size()]);
-	}
-	
-	public String[] listTables() {
-		ArrayList<String> returnList = new ArrayList<String>();
-		try {
-			String[] types = {"TABLE"};
-			set = dbMetaData.getTables(null, null, "%", types);
+			set = statement.executeQuery(sql);
+			int index = 0;
 			while (set.next()) {
-				returnList.add(set.getString("TABLE_NAME"));
+				ArrayList<String> columnData = new ArrayList<String>();
+				for (String column : tableColumns) {
+					columnData.add(set.getString(column));
+				}
+				tableData.add(new TableData(table,
+						columnData.toArray(new String[columnData.size()]), index));
+				index ++;
 			}
-		} catch (SQLException e) {
-			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
-			errorMsg = e.getSQLState();
-		} catch (Exception e) {
-			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+		} catch(SQLException e) {
+			String err = "\nAn error has occured in selectTable with SQL\n" + e.getSQLState();
+			System.out.println(err);
+			errorMsg = e.getMessage();
+		} catch(Exception e) {
+			String err = "\nAn error has occured in selectTable with general\n" + e.getMessage();
+			System.out.println(err);
 			errorMsg = e.getMessage();
 		}
-		return returnList.toArray(new String[returnList.size()]);
+		return tableData.toArray(new TableData[tableData.size()]);
 	}
 	
-	public ArrayList<String> listDataTypes() {
-		ArrayList<String> returnList = new ArrayList<String>();
-	    try {
-			set = dbMetaData.getTypeInfo();
-		    while (set.next()) {
-		    	returnList.add(set.getString("TYPE_NAME"));
-		    }
-	    } catch (SQLException e) {
-			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
-			errorMsg = e.getSQLState();
-		} catch (Exception e) {
-			System.out.println("\nAn error has occured in general\n" + e.getMessage());
-			errorMsg = e.getMessage();
+	public boolean createData(String tableName, String[] values) {
+		String sql = "insert into `" + tableName + "`(";
+		int max = listColumns(tableName).length, j = 1;
+		for (TableType t : listColumns(tableName)) {
+			sql += "`" + t.nameTypes + "`";
+			if (j != max)
+				sql += ", ";
+			j ++;
 		}
-	    return returnList;
+		sql += ") ";
+		sql += "values (";
+		try {
+			for (int i = 0; i < values.length; i ++) {
+				sql += "'" + values[i] + "'";
+				if (i != values.length -1)
+					sql += ", ";
+			}
+			sql += ")";
+			
+			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in createData with SQL\n" + e.getMessage());
+			errorMsg = e.getMessage();
+			return false;
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in createData with general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+			return false;
+		}
+		return true;
 	}
 	
 	public boolean createTable(String tableName, TableType[] tableInfo) {
@@ -149,15 +162,71 @@ public class ConnectorDB {
 			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
 			statement.executeUpdate(sql);
 		} catch (SQLException e) {
-			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
-			errorMsg = e.getSQLState();
+			System.out.println("\nAn error has occured in createTable with SQL\n" + e.getMessage());
+			errorMsg = e.getMessage();
 			return false;
 		} catch (Exception e) {
-			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+			System.out.println("\nAn error has occured in createTable with general\n" + e.getMessage());
 			errorMsg = e.getMessage();
 			return false;
 		}
 		return true;
+	}
+	
+	public TableType[] listColumns(String tableName) {
+		ArrayList<TableType> returnList = new ArrayList<TableType>();
+		try {
+			set2 = dbMetaData.getColumns(null,null, tableName, null);
+			while(set2.next()) {
+				int tableTypeInt = Integer.parseInt(set2.getString("DATA_TYPE"));
+				returnList.add(new TableType(
+						set2.getString("COLUMN_NAME"),
+						listDataTypes()[tableTypeInt],
+						set2.getString("COLUMN_SIZE")));
+			}
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in listColumns with SQL\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in listColumns with general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		}
+		return returnList.toArray(new TableType[returnList.size()]);
+	}
+	
+	public String[] listTables() {
+		ArrayList<String> returnList = new ArrayList<String>();
+		try {
+			String[] types = {"TABLE"};
+			set = dbMetaData.getTables(null, null, "%", types);
+			while (set.next()) {
+				returnList.add(set.getString("TABLE_NAME"));
+			}
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in listTables with SQL\n" + e.getMessage());
+			errorMsg = e.getSQLState();
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in listTables with general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		}
+		return returnList.toArray(new String[returnList.size()]);
+	}
+	
+	public String[] listDataTypes() {
+		ArrayList<String> returnList = new ArrayList<String>();
+	    try {
+			set = dbMetaData.getTypeInfo();
+		    while (set.next()) {
+		    	returnList.add(set.getString("TYPE_NAME"));
+		    }
+	    } catch (SQLException e) {
+			System.out.println("\nAn error has occured in SQL\n" + e.getMessage());
+			errorMsg = e.getSQLState();
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		}
+	    return returnList.toArray(new String[returnList.size()]);
 	}
 	
 	public String databaseRaw(String command) {

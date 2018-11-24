@@ -109,6 +109,8 @@ public class ConnectorDB {
 		return tableData.toArray(new TableData[tableData.size()]);
 	}
 	
+	
+	
 	public boolean createData(String tableName, String[] values) {
 		String sql = "insert into `" + tableName + "`(";
 		int max = listColumns(tableName).length, j = 1;

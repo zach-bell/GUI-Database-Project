@@ -22,6 +22,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -61,7 +62,7 @@ public class Frames {
 	private JLabel titleLabel;
 	private JLabel loginLabel;
 	private JLabel passwordLabel;
-	private JLabel errorText;
+	public JLabel errorText;
 	private JLabel timeLabel;
 	private JLabel createTabSubPanelTitle;
 	private ArrayList<JLabel> tableLabelsList;
@@ -82,6 +83,7 @@ public class Frames {
 	private JButton createButton;
 	private JButton createTableButton;
 	private JButton createEntryButton;
+	private JButton deleteTableButton;
 	private JButton sendUpdateButton;
 	private JButton exploreButton;
 	private JButton terminalButton;
@@ -326,7 +328,7 @@ public class Frames {
 	}
 	
 	private void populateCreateEntrySubFrame() {
-		subPanel.removeAll();
+		refreshPanel(subPanel);
 		createTabSubPanelTitle.setText("Create Entry");
 		createSubPanelPosition = 1;
 		
@@ -339,13 +341,11 @@ public class Frames {
 		panelGridAdd(subPanel, tableColumnsLabel, 1, 0);
 		panelGridAdd(subPanel, dropDownTables, 0, 1);
 		panelGridAdd(subPanel, columnsTypesPanel, 1, 1);
-		subPanel.setVisible(false);
-		subPanel.setVisible(true);
 	}
 	
 	private void populateCreateEntrySubFrameColumns() {
 		entryFieldList.clear();
-		columnsTypesPanel.removeAll();
+		refreshPanel(columnsTypesPanel);
 		System.out.println("");
 		int columnsTypesPanelX = 0;
 		for (TableType tableColumn : connector.listColumns(connector.listTables()[dropDownTables.getSelectedIndex()])) {
@@ -361,8 +361,6 @@ public class Frames {
 			panelGridAdd(columnsTypesPanel, columnType, columnsTypesPanelX, 1);
 			columnsTypesPanelX ++;
 		}
-		columnsTypesPanel.setVisible(false);
-		columnsTypesPanel.setVisible(true);
 	}
 	
 	private void sendCreatedEntry() {
@@ -378,6 +376,12 @@ public class Frames {
 			errorText.setText(connector.errorMsg);
 			errorText.setVisible(true);
 		}
+	}
+	
+	private void populateDeleteTableFrame() {
+		refreshPanel(subPanel);
+		
+		panelGridAdd(contentPanel, subPanelScroll, 1, 0);
 	}
 	
 	//	-------------------------------------------------------------------------------------------------
@@ -401,9 +405,10 @@ public class Frames {
 			String tableName = tableListArray[i];
 			JButton tableEntry = new JButton(tableName);
 			tableEntry.addActionListener(new ActionListener() {
+				String table = tableName;
 				public void actionPerformed(ActionEvent e) {
-					System.out.println("\t" + tableName +" button clicked");
-					populateExploreFramePanel(tableName);
+					System.out.println("\t" + table +" button clicked");
+					populateExploreFramePanel(table);
 				}
 			});
 			exploreButtonTableList.add(tableEntry);
@@ -419,7 +424,7 @@ public class Frames {
 	}
 	
 	private void populateExploreFramePanel(String tableName) {
-		subPanel.removeAll();
+		refreshPanel(subPanel);
 		
 		JPanel innerPanel = new JPanel(new GridBagLayout());
 		innerPanel.setBackground(Color.LIGHT_GRAY);
@@ -443,6 +448,15 @@ public class Frames {
 			int x = 0;
 			t.tableName = tableName;
 			t.index = y;
+			JButton dropEntryButton = new JButton("X");
+			dropEntryButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("\tDrop table entry for " + t.tableName + " button clicked");
+					
+				}
+			});
+			JOptionPane.showConfirmDialog(subPanel,
+					"Are you sure you want to drop this entry?", "", JOptionPane.YES_NO_OPTION);
 			for (String s : t.data) {
 				JLabel data = new JLabel(s);
 				data.setFont(font.deriveFont(12f));
@@ -450,6 +464,7 @@ public class Frames {
 				panelGridAdd(innerPanel, data, x, y);
 				x ++;
 			}
+			panelGridAdd(innerPanel, dropEntryButton, x, y);
 			y ++;
 		}
 		panelGridAdd(subPanel, subPanelTitle, 0, 0);
@@ -468,6 +483,25 @@ public class Frames {
 		panelGridAdd(buttonPanel, createButton, 1, 0);
 		panelGridAdd(buttonPanel, exploreButton, 2, 0);
 		panelGridAdd(buttonPanel, terminalButton, 3, 0);
+		panelGridAdd(buttonPanel, logoutButton, 4, 0);
+	}
+	
+	private void populateStaffFrame() {
+		refreshPanel(contentPanel);
+		System.out.println("Staff Panel Initialized");
+		
+		panelGridAdd(buttonPanel, homeButton, 0, 0);
+		panelGridAdd(buttonPanel, createButton, 1, 0);
+		panelGridAdd(buttonPanel, exploreButton, 2, 0);
+		panelGridAdd(buttonPanel, logoutButton, 4, 0);
+	}
+	
+	private void populateStudentFrame() {
+		refreshPanel(contentPanel);
+		System.out.println("Student Panel Initialized");
+		
+		panelGridAdd(buttonPanel, homeButton, 0, 0);
+		panelGridAdd(buttonPanel, exploreButton, 2, 0);
 		panelGridAdd(buttonPanel, logoutButton, 4, 0);
 	}
 	
@@ -672,6 +706,18 @@ public class Frames {
 			}
 		});
 		
+		deleteTableButton = new JButton("Delete Table");
+		deleteTableButton.setToolTipText("Displays the Delete Table panel");
+		deleteTableButton.setFont(font.deriveFont(12f));
+		deleteTableButton.setFocusPainted(false);
+		deleteTableButton.setBackground(buttonColor);
+		deleteTableButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("\tDelete Table button clicked");
+				populateDeleteTableFrame();
+			}
+		});
+		
 		sendUpdateButton = new JButton("Send Update");
 		sendUpdateButton.setToolTipText("Sends an update to the database");
 		sendUpdateButton.setFont(font.deriveFont(12f));
@@ -722,6 +768,15 @@ public class Frames {
 		panel.setVisible(true);
 	}
 	
+	private void standardButtonInits(JButton button, String buttonText, String toolTip, ActionListener action) {
+		button = new JButton(buttonText);
+		button.setToolTipText(toolTip);
+		button.setFont(font.deriveFont(14f));
+		button.setFocusPainted(false);
+		button.setBackground(buttonColor);
+		button.addActionListener(action);
+	}
+	
 	private void panelGridAdd(JPanel panel, Component comp, int gx, int gy) {
 		grid.gridx = gx;
 		grid.gridy = gy;
@@ -737,10 +792,12 @@ public class Frames {
 		if (currentUser.permLvl == 2) {
 			refreshPanel(buttonPanel);
 			refreshPanel(contentPanel);
+			populateStaffFrame();
 		} else
 		if (currentUser.permLvl == 1) {
 			refreshPanel(buttonPanel);
 			refreshPanel(contentPanel);
+			populateStudentFrame();
 		}
 		if (currentUser.permLvl > 0) {
 			populateHomeFrame();

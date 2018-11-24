@@ -15,11 +15,21 @@ public class UniversityDBThread extends Thread {
 		this.frames = frames;
 	}
 	
+	private int incre = 0;
+	private final int maxIncre = 10;
+	
 	public void run() {
 		while (!Thread.currentThread().isInterrupted()) {
 		    try {
 		    	frames.updateTimeLabel();
-		    	
+		    	if (frames.errorText.isVisible()) {
+		    		incre ++;
+		    		if (incre >= maxIncre) {
+		    			frames.errorText.setVisible(false);
+		    		}
+		    	} else {
+		    		incre = 0;
+		    	}
 		        Thread.sleep(1000);
 		    } catch (InterruptedException ex) {
 		        Thread.currentThread().interrupt();

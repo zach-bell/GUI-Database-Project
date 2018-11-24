@@ -58,6 +58,8 @@ public class Frames {
 	private JComboBox<String> dropDownTables;
 	private ArrayList<JTextField> entryFieldList;
 	
+	private ActionListener dropDownTablesAction;
+	
 	// Labels
 	private JLabel titleLabel;
 	private JLabel loginLabel;
@@ -335,6 +337,10 @@ public class Frames {
 		JLabel tableListLabel = new JLabel("Table List");
 		JLabel tableColumnsLabel = new JLabel("Columns and types");
 		
+		dropDownTables = new JComboBox<String>(connector.listTables());
+		dropDownTables.addActionListener(dropDownTablesAction);
+		dropDownTables.setSelectedIndex(0);
+		
 		populateCreateEntrySubFrameColumns();
 		
 		panelGridAdd(subPanel, tableListLabel, 0, 0);
@@ -434,11 +440,33 @@ public class Frames {
 		subPanelTitle.setForeground(Color.DARK_GRAY);
 		subPanelTitle.setFont(font.deriveFont(14f));
 		
+		JButton dropTableButton = new JButton("X");
+		dropTableButton.addActionListener(new ActionListener() {
+			
+			String table = tableName;
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("\tDrop table entry for " + table + " button clicked");
+				int choice = JOptionPane.showConfirmDialog(subPanel,
+						"Are you sure you want to drop " + table + "?", "Make a choice man", JOptionPane.YES_NO_OPTION);
+				if (choice == 0) {
+					System.out.println("\nDropping table Entry...");
+					connector.dropTable(table);
+					JOptionPane.showConfirmDialog(subPanel, "ok :c", ":(", JOptionPane.PLAIN_MESSAGE);
+					populateExploreFrame();
+				}
+			}
+		});
+		
 		int i = 0;
 		for (TableType t : connector.listColumns(tableName)) {
 			JLabel columnTitle = new JLabel(t.nameTypes);
-			columnTitle.setFont(font.deriveFont(12f));
-			columnTitle.setForeground(Color.DARK_GRAY);
+			if (t.primaryKey) {
+				columnTitle.setFont(font.deriveFont(13f));
+				columnTitle.setForeground(Color.BLACK);
+			} else {
+				columnTitle.setFont(font.deriveFont(12f));
+				columnTitle.setForeground(Color.DARK_GRAY);
+			}
 			panelGridAdd(innerPanel, columnTitle, i, 0);
 			i ++;
 		}
@@ -446,17 +474,21 @@ public class Frames {
 		int y = 1;
 		for (TableData t : connector.selectTable(tableName)) {
 			int x = 0;
-			t.tableName = tableName;
-			t.index = y;
 			JButton dropEntryButton = new JButton("X");
 			dropEntryButton.addActionListener(new ActionListener() {
+				
+				TableData data = t;
 				public void actionPerformed(ActionEvent e) {
-					System.out.println("\tDrop table entry for " + t.tableName + " button clicked");
-					
+					System.out.println("\tDrop table entry for " + data.tableName + " button clicked");
+					int choice = JOptionPane.showConfirmDialog(subPanel,
+							"Are you sure you want to drop this entry?", "Make a choice man", JOptionPane.YES_NO_OPTION);
+					if (choice == 0) {
+						System.out.println("\nDropping table Entry...");
+						connector.deleteTableEntry(tableName, data);
+						populateExploreFrame();
+					}
 				}
 			});
-			JOptionPane.showConfirmDialog(subPanel,
-					"Are you sure you want to drop this entry?", "", JOptionPane.YES_NO_OPTION);
 			for (String s : t.data) {
 				JLabel data = new JLabel(s);
 				data.setFont(font.deriveFont(12f));
@@ -464,10 +496,13 @@ public class Frames {
 				panelGridAdd(innerPanel, data, x, y);
 				x ++;
 			}
-			panelGridAdd(innerPanel, dropEntryButton, x, y);
+			if (currentUser.permLvl >= 2)
+				panelGridAdd(innerPanel, dropEntryButton, x, y);
 			y ++;
 		}
 		panelGridAdd(subPanel, subPanelTitle, 0, 0);
+		if (currentUser.permLvl == 3)
+			panelGridAdd(subPanel, dropTableButton, 1, 0);
 		panelGridAdd(subPanel, innerPanel, 0, 1);
 	}
 	
@@ -515,7 +550,15 @@ public class Frames {
 		entryFieldList = new ArrayList<JTextField>();
 		exploreButtonTableList = new ArrayList<JButton>();
 		tableColumnJHolderList = new ArrayList<TableColumnJHolder>();
-		dropDownTables = new JComboBox<String>();
+		
+		dropDownTablesAction = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				populateCreateEntrySubFrameColumns();
+			}
+		};
+		
+		dropDownTables = new JComboBox<String>(connector.listTables());
+		dropDownTables.addActionListener(dropDownTablesAction);
 		
 		grid = new GridBagConstraints();
 		grid.insets = new Insets(10, 10, 10, 10);
@@ -538,13 +581,6 @@ public class Frames {
 			}
 		});
 		
-		dropDownTables = new JComboBox<String>(connector.listTables());
-		dropDownTables.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				populateCreateEntrySubFrameColumns();
-			}
-		});
-		
 		terminalArea = new JTextArea(16, 58);
 		terminalArea.setBackground(Color.DARK_GRAY);
 		terminalArea.setForeground(Color.GREEN);
@@ -556,7 +592,7 @@ public class Frames {
 		exploreArea.setEditable(false);
 		
 		scrollTerminalPanel = new JScrollPane(terminalArea);
-	}
+	} // GeneralInit()
 	
 	private void mainInit() {
 		mainFrame.add(titlePanel, BorderLayout.NORTH);
@@ -632,98 +668,57 @@ public class Frames {
 	}
 	
 	private void buttonInit() {
-		// login button
-		loginButton = new JButton("Log In");
-		loginButton.setFont(font.deriveFont(14f));
-		loginButton.setToolTipText("Lets you login");
-		loginButton.setFocusPainted(false);
-		loginButton.setBackground(buttonColor);
-		loginButton.addActionListener(new ActionListener() {
+		loginButton = new JButton();
+		standardButtonInits(loginButton, "Log In", "Lets you login", 14f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tLoggin button clicked");
 				toggleLogging();
 			}
 		});
-		
-		// logout button
-		logoutButton = new JButton("Log out");
-		logoutButton.setFont(font.deriveFont(14f));
-		logoutButton.setToolTipText("Lets you logout");
-		logoutButton.setFocusPainted(false);
-		logoutButton.setBackground(buttonColor);
-		logoutButton.addActionListener(new ActionListener() {
+		logoutButton = new JButton();
+		standardButtonInits(logoutButton, "Log out", "Lets you logout", 14f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tLogout button clicked");
 				toggleLogging();
 			}
 		});
-		
-		homeButton = new JButton("Home");
-		homeButton.setToolTipText("Displays the Home panel");
-		homeButton.setFont(font.deriveFont(14f));
-		homeButton.setFocusPainted(false);
-		homeButton.setBackground(buttonColor);
-		homeButton.addActionListener(new ActionListener() {
+		homeButton = new JButton();
+		standardButtonInits(homeButton, "Home", "Displays the Home panel", 14f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tHome button clicked");
 				populateHomeFrame();
 			}
 		});
-		
-		createButton = new JButton("Create");
-		createButton.setToolTipText("Displays the Creation panel");
-		createButton.setFont(font.deriveFont(14f));
-		createButton.setFocusPainted(false);
-		createButton.setBackground(buttonColor);
-		createButton.addActionListener(new ActionListener() {
+		createButton = new JButton();
+		standardButtonInits(createButton, "Create", "Displays the Creation panel", 14f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tCreate button clicked");
 				populateCreateFrame();
 			}
 		});
-		
-		createTableButton = new JButton("Create Table");
-		createTableButton.setToolTipText("Displays the Creation Table panel");
-		createTableButton.setFont(font.deriveFont(12f));
-		createTableButton.setFocusPainted(false);
-		createTableButton.setBackground(buttonColor);
-		createTableButton.addActionListener(new ActionListener() {
+		createTableButton = new JButton();
+		standardButtonInits(createTableButton, "Create Table", "Displays the Creation Table panel", 12f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tCreate Table button clicked");
 				populateCreateTableSubFrame();
 			}
 		});
-		
-		createEntryButton = new JButton("Create Entry");
-		createEntryButton.setToolTipText("Displays the Creation Entry panel");
-		createEntryButton.setFont(font.deriveFont(12f));
-		createEntryButton.setFocusPainted(false);
-		createEntryButton.setBackground(buttonColor);
-		createEntryButton.addActionListener(new ActionListener() {
+		createEntryButton = new JButton();
+		standardButtonInits(createEntryButton, "Create Entry", "Displays the Creation Entry panel", 12f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tCreate Entry button clicked");
 				populateCreateEntrySubFrame();
 			}
 		});
-		
-		deleteTableButton = new JButton("Delete Table");
-		deleteTableButton.setToolTipText("Displays the Delete Table panel");
-		deleteTableButton.setFont(font.deriveFont(12f));
-		deleteTableButton.setFocusPainted(false);
-		deleteTableButton.setBackground(buttonColor);
-		deleteTableButton.addActionListener(new ActionListener() {
+		deleteTableButton = new JButton();
+		standardButtonInits(deleteTableButton, "Delete Table", "Displays the Delete Table panel", 12f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tDelete Table button clicked");
 				populateDeleteTableFrame();
 			}
 		});
-		
-		sendUpdateButton = new JButton("Send Update");
-		sendUpdateButton.setToolTipText("Sends an update to the database");
-		sendUpdateButton.setFont(font.deriveFont(12f));
-		sendUpdateButton.setFocusPainted(false);
-		sendUpdateButton.setBackground(buttonColor);
-		sendUpdateButton.addActionListener(new ActionListener() {
+		sendUpdateButton = new JButton();
+		standardButtonInits(sendUpdateButton, "Send Update", "Sends an update to the database", 12f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tSend Update button clicked");
 				if (createSubPanelPosition == 0)
@@ -732,25 +727,15 @@ public class Frames {
 					sendCreatedEntry();
 			}
 		});
-		
-		exploreButton = new JButton("Explore");
-		exploreButton.setToolTipText("Displays the Explore panel");
-		exploreButton.setFont(font.deriveFont(14f));
-		exploreButton.setFocusPainted(false);
-		exploreButton.setBackground(buttonColor);
-		exploreButton.addActionListener(new ActionListener() {
+		exploreButton = new JButton();
+		standardButtonInits(exploreButton, "Explore", "Displays the Explore panel", 14f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tExplore button clicked");
 				populateExploreFrame();
 			}
 		});
-		
-		terminalButton = new JButton("Terminal");
-		terminalButton.setToolTipText("Displays the Terminal panel");
-		terminalButton.setFont(font.deriveFont(14f));
-		terminalButton.setFocusPainted(false);
-		terminalButton.setBackground(buttonColor);
-		terminalButton.addActionListener(new ActionListener() {
+		terminalButton = new JButton();
+		standardButtonInits(terminalButton, "Terminal", "Displays the Terminal panel", 14f, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("\tExplore button clicked");
 				populateTerminalFrame();
@@ -768,10 +753,10 @@ public class Frames {
 		panel.setVisible(true);
 	}
 	
-	private void standardButtonInits(JButton button, String buttonText, String toolTip, ActionListener action) {
-		button = new JButton(buttonText);
+	private void standardButtonInits(JButton button, String buttonText, String toolTip, float fontSize, ActionListener action) {
+		button.setText(buttonText);
 		button.setToolTipText(toolTip);
-		button.setFont(font.deriveFont(14f));
+		button.setFont(font.deriveFont(fontSize));
 		button.setFocusPainted(false);
 		button.setBackground(buttonColor);
 		button.addActionListener(action);

@@ -1,5 +1,10 @@
 package main.window;
 
+/* --------------------------
+ * CS 430 - Database Project
+ * By: Zachary Vanscoit
+ * -------------------------- */
+
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 

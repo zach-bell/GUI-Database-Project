@@ -27,6 +27,7 @@ public class ConnectorDB {
 	
 	private ResultSet set;
 	private ResultSet set2;
+	private ResultSet set3;
 	
 	public ConnectorDB() {
 		try {
@@ -87,15 +88,18 @@ public class ConnectorDB {
 				tableColumns.add(t.nameTypes);
 			}
 			set = statement.executeQuery(sql);
-			int index = 0;
+			set3 = dbMetaData.getPrimaryKeys(null, null, table);
+			set3.next();
+			String primaryKey = set3.getString("COLUMN_NAME");
+			
+			int primaryIndex = tableColumns.indexOf(primaryKey);
 			while (set.next()) {
 				ArrayList<String> columnData = new ArrayList<String>();
 				for (String column : tableColumns) {
 					columnData.add(set.getString(column));
 				}
 				tableData.add(new TableData(table,
-						columnData.toArray(new String[columnData.size()]), index));
-				index ++;
+						columnData.toArray(new String[columnData.size()]), primaryKey, primaryIndex));
 			}
 		} catch(SQLException e) {
 			String err = "\nAn error has occured in selectTable with SQL\n" + e.getSQLState();
@@ -108,8 +112,6 @@ public class ConnectorDB {
 		}
 		return tableData.toArray(new TableData[tableData.size()]);
 	}
-	
-	
 	
 	public boolean createData(String tableName, String[] values) {
 		String sql = "insert into `" + tableName + "`(";
@@ -175,16 +177,55 @@ public class ConnectorDB {
 		return true;
 	}
 	
+	public boolean dropTable(String tableName) {
+		try {
+			String sql = "drop table `" + tableName +"`";
+			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in dropTable with SQL\n" + e.getMessage());
+			errorMsg = e.getMessage();
+			return false;
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in dropTable with general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean deleteTableEntry(String tableName, TableData data) {
+		try {
+			String sql = "delete from `" + tableName + "` where `" + data.primaryKeyColumn + "` = '" +
+					data.data[data.primaryKeyIndexInData] + "'";
+			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
+			statement.executeUpdate(sql);
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in delete entry with SQL\n" + e.getMessage());
+			errorMsg = e.getMessage();
+			return false;
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in delete entry with general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+			return false;
+		}
+		return true;
+	}
+	
 	public TableType[] listColumns(String tableName) {
 		ArrayList<TableType> returnList = new ArrayList<TableType>();
 		try {
 			set2 = dbMetaData.getColumns(null,null, tableName, null);
+			set3 = dbMetaData.getPrimaryKeys(null, null, tableName);
+			set3.next();
+			String primaryKey = set3.getString("COLUMN_NAME");
 			while(set2.next()) {
 				int tableTypeInt = Integer.parseInt(set2.getString("DATA_TYPE"));
 				returnList.add(new TableType(
 						set2.getString("COLUMN_NAME"),
 						listDataTypes()[tableTypeInt],
-						set2.getString("COLUMN_SIZE")));
+						set2.getString("COLUMN_SIZE"),
+						primaryKey!=null?true:false, primaryKey));
 			}
 		} catch (SQLException e) {
 			System.out.println("\nAn error has occured in listColumns with SQL\n" + e.getMessage());

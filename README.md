@@ -8,5 +8,3 @@
 <p>Questions I needed to fill during this project was "What if I had n number of tables?" or "What if I had n number of entries?" and "How would the GUI scale accordingly to different screen sizes and those massive number of entries?"</p>
 <strong><a href="https://github.com/zach-bell/GUI-Database-Project/raw/master/Versions/UDatabase_executable_v1.0.jar">Download here!</a></strong>
 <br/>
-<p>Functional Video here:</p>
-<embed src="https://github.com/zach-bell/GUI-Database-Project/raw/master/Assignment-Documents/UDatabase-version-1.mp4" width="325" height="230" allowfullscreen="true" />

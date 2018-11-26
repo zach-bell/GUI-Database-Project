@@ -302,6 +302,7 @@ public class Frames {
 					}
 				}
 			}
+			tableTypeSender.get(0).primaryKey = true;
 		} catch (NumberFormatException e) {
 			errorText.setText("Why don't you actually put a number in the length column in this time.");
 			errorText.setVisible(true);
@@ -327,6 +328,10 @@ public class Frames {
 		tableColumnJHolderList.add(new TableColumnJHolder(typeName, dropDownTypes, length));
 		subPanel.setVisible(false);
 		subPanel.setVisible(true);
+		if (createTableEntriesCount <= 4) {
+			errorText.setVisible(true);
+			errorText.setVisible(false);
+		}
 	}
 	
 	private void populateCreateEntrySubFrame() {

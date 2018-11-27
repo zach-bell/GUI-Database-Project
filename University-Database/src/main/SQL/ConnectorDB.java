@@ -33,6 +33,8 @@ public class ConnectorDB {
 	private ResultSet set2;
 	private ResultSet set3;
 	
+	private String dbName = "university-db";
+	
 	public ConnectorDB() {
 		try {
 			// Establishes a connection
@@ -178,7 +180,7 @@ public class ConnectorDB {
 	
 	public boolean createTable(String tableName, TableType[] tableInfo) {
 		try {
-			String sql = "create table if not exists `" + tableName +"` (";
+			String sql = "create table if not exists `" + dbName + "`.`" + tableName +"` (";
 			for (int i = 0; i < tableInfo.length; i++) {
 				sql += "`" + tableInfo[i].nameTypes + "` ";
 				sql += tableInfo[i].types + "(";
@@ -190,7 +192,7 @@ public class ConnectorDB {
 				}
 			}
 			if (tableInfo[0].primaryKey) {
-				sql += ", primary key (`" + tableInfo[0].primary + "`)";
+				sql += ", primary key (`" + tableInfo[0].nameTypes + "`)";
 			}
 			sql += ");";
 			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
@@ -209,7 +211,7 @@ public class ConnectorDB {
 	
 	public boolean dropTable(String tableName) {
 		try {
-			String sql = "drop table `" + tableName +"`";
+			String sql = "drop table `" + dbName + "`.`" + tableName +"`";
 			System.out.println("\n-------------------\n" + "Sending to database:\n" + sql + "\n\n");
 			statement.executeUpdate(sql);
 		} catch (SQLException e) {

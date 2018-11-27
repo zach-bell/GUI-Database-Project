@@ -9,9 +9,11 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+
 
 public class ConnectorDB {
 	
@@ -22,6 +24,8 @@ public class ConnectorDB {
 	private Connection con;
 	
 	private DatabaseMetaData dbMetaData;
+	
+	private ResultSetMetaData rsMetaData;
 	
 	private Statement statement;
 	
@@ -78,6 +82,32 @@ public class ConnectorDB {
 		}
 		return result;
 	}
+	
+//	public ArrayList<String[]> selectTable(String query) {
+//		String sender = query;
+//		ArrayList<String[]> result = new ArrayList<String[]>();
+//		try {
+//			set = statement.executeQuery(sender);
+//			rsMetaData = set.getMetaData();
+//			int colm = rsMetaData.getColumnCount();
+//			while (set.next()) {
+//				String[] rec = new String[colm];
+//				for (int i = 0; i < colm; i++) {
+//					for (int j = 0; j < colm; j++) {
+//						rec[j] = set.getString(j - 1);
+//					}
+//				}
+//				result.add(rec);
+//			}
+//		} catch(SQLException e) {
+//			String err = "\nAn error has occured in selectTable with SQL\n" + e.getSQLState();
+//			System.out.println(err);
+//		} catch(Exception e) {
+//			String err = "\nAn error has occured in selectTable with general\n" + e.getMessage();
+//			System.out.println(err);
+//		}
+//		return result;
+//	}
 	
 	public TableData[] selectTable(String table) {
 		String sql = "select * from `" + table + "`";
@@ -235,6 +265,23 @@ public class ConnectorDB {
 			errorMsg = e.getMessage();
 		}
 		return returnList.toArray(new TableType[returnList.size()]);
+	}
+	
+	public String[] listColumnsString(String tableName) {
+		ArrayList<String> returnList = new ArrayList<String>();
+		try {
+			set = dbMetaData.getColumns(null,null, tableName, null);
+			while(set.next()) {
+				returnList.add(set.getString("COLUMN_NAME"));
+			}
+		} catch (SQLException e) {
+			System.out.println("\nAn error has occured in listColumns with SQL\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		} catch (Exception e) {
+			System.out.println("\nAn error has occured in listColumns with general\n" + e.getMessage());
+			errorMsg = e.getMessage();
+		}
+		return returnList.toArray(new String[returnList.size()]);
 	}
 	
 	public String[] listTables() {

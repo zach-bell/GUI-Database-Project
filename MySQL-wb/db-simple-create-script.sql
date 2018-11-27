@@ -99,6 +99,13 @@ CREATE TABLE IF NOT EXISTS `University-DB`.`Major` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+CREATE TABLE `university-db`.`db-users` (
+  `username` VARCHAR(16) NOT NULL,
+  `password` VARCHAR(45) NULL,
+  `nickname` VARCHAR(45) NULL,
+  PRIMARY KEY (`username`),
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE);
+
 CREATE USER 'admin' IDENTIFIED BY 'admin';
 
 GRANT ALL ON `University-DB`.* TO 'admin';
